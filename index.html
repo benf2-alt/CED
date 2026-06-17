@@ -4,1198 +4,1335 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CED — Compact Electrolysis Device</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-  :root {
-    --void: #050508;
-    --deep: #0a0a12;
-    --surface: #10101a;
-    --border: rgba(255,255,255,0.07);
-    --white: #f8f9ff;
-    --cyan: #00e5ff;
-    --blue: #0055ff;
-    --aqua: #00b4d8;
-    --glow: rgba(0,229,255,0.15);
-    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  }
+:root {
+  --void: #03030a;
+  --deep: #07070f;
+  --surface: #0d0d1c;
+  --card: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.07);
+  --white: #f0f4ff;
+  --cyan: #00e5ff;
+  --blue: #0055ff;
+  --aqua: #00b4d8;
+  --glow: rgba(0,229,255,0.2);
+  --font: -apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--white);font-family:var(--font);overflow-x:hidden;}
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* ─── CUSTOM CURSOR ─── */
+#cursor{position:fixed;width:12px;height:12px;background:var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width 0.2s,height 0.2s,opacity 0.2s;mix-blend-mode:difference;}
+#cursor-ring{position:fixed;width:40px;height:40px;border:1px solid rgba(0,229,255,0.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width 0.3s,height 0.3s,border-color 0.3s;}
+body:hover #cursor{opacity:1;}
+.cursor-hover #cursor{width:20px;height:20px;}
+.cursor-hover #cursor-ring{width:60px;height:60px;border-color:rgba(0,229,255,0.8);}
 
-  html { scroll-behavior: smooth; }
+/* ─── NAV ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(3,3,10,0.8);backdrop-filter:blur(24px) saturate(200%);border-bottom:1px solid var(--border);transition:background 0.4s;}
+.logo{font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--white);}
+.logo span{color:var(--cyan);}
+nav ul{list-style:none;display:flex;gap:40px;}
+nav ul li a{color:rgba(240,244,255,0.6);text-decoration:none;font-size:13px;font-weight:400;letter-spacing:0.01em;transition:color 0.2s;}
+nav ul li a:hover{color:var(--white);}
+.nav-btn{background:var(--cyan);color:#000;border:none;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:transform 0.2s,box-shadow 0.2s;}
+.nav-btn:hover{transform:scale(1.05);box-shadow:0 0 24px rgba(0,229,255,0.5);}
 
-  body {
-    background: var(--void);
-    color: var(--white);
-    font-family: var(--font);
-    overflow-x: hidden;
-    cursor: default;
-  }
+/* ─── HERO ─── */
+#hero{height:100vh;position:relative;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;}
+#hero-three{position:absolute;inset:0;z-index:0;}
+.hero-content{position:relative;z-index:2;}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:28px;opacity:0;animation:fadeUp 0.9s 0.3s forwards;}
+.eyebrow::before,.eyebrow::after{content:'';width:32px;height:1px;background:currentColor;opacity:0.5;}
+h1.hero-h{font-size:clamp(56px,9vw,104px);font-weight:700;letter-spacing:-0.05em;line-height:0.95;opacity:0;animation:fadeUp 0.9s 0.5s forwards;}
+h1.hero-h .c1{color:var(--white);}
+h1.hero-h .c2{color:var(--cyan);display:block;}
+.hero-sub{font-size:clamp(17px,2.2vw,22px);font-weight:300;color:rgba(240,244,255,0.55);margin-top:24px;letter-spacing:-0.01em;opacity:0;animation:fadeUp 0.9s 0.7s forwards;}
+.hero-sub em{color:var(--cyan);font-style:italic;font-weight:400;}
+.hero-btns{display:flex;gap:14px;justify-content:center;margin-top:48px;opacity:0;animation:fadeUp 0.9s 0.9s forwards;}
+.btn-p{background:var(--cyan);color:#000;padding:15px 36px;border-radius:30px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:var(--font);transition:transform 0.25s,box-shadow 0.25s;}
+.btn-p:hover{transform:scale(1.06);box-shadow:0 0 40px rgba(0,229,255,0.55);}
+.btn-g{background:transparent;color:var(--white);padding:15px 36px;border-radius:30px;font-size:16px;font-weight:400;border:1px solid rgba(240,244,255,0.2);cursor:pointer;font-family:var(--font);transition:border-color 0.25s,background 0.25s;}
+.btn-g:hover{border-color:rgba(240,244,255,0.5);background:rgba(255,255,255,0.04);}
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(240,244,255,0.3);opacity:0;animation:fadeUp 1s 1.4s forwards;}
+.scroll-bar{width:1px;height:44px;background:linear-gradient(to bottom,transparent,var(--cyan),transparent);animation:scrollAnim 2.2s ease-in-out infinite;}
 
-  /* ─── NAV ─── */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    padding: 0 48px;
-    height: 52px;
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(5,5,8,0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border);
-    transition: background 0.4s;
-  }
-  nav .logo {
-    font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
-    color: var(--white);
-  }
-  nav .logo span { color: var(--cyan); }
-  nav ul {
-    list-style: none;
-    display: flex; gap: 36px;
-  }
-  nav ul li a {
-    color: rgba(248,249,255,0.75);
-    text-decoration: none;
-    font-size: 13px; font-weight: 400;
-    letter-spacing: 0.2px;
-    transition: color 0.2s;
-  }
-  nav ul li a:hover { color: var(--white); }
-  nav .nav-cta {
-    background: var(--cyan);
-    color: #000;
-    border: none;
-    padding: 7px 18px;
-    border-radius: 20px;
-    font-size: 13px; font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-family: var(--font);
-  }
-  nav .nav-cta:hover {
-    transform: scale(1.04);
-    box-shadow: 0 0 20px rgba(0,229,255,0.4);
-  }
+/* ─── TAGLINE BAND ─── */
+#tagline-band{padding:100px 0;display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--deep);position:relative;}
+#tagline-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%, rgba(0,85,255,0.06),transparent);}
+.big-tagline{font-size:clamp(32px,5.5vw,72px);font-weight:700;letter-spacing:-0.04em;line-height:1.1;max-width:900px;padding:0 48px;position:relative;}
+.big-tagline .hl{color:var(--cyan);}
+.tag-sub{font-size:clamp(15px,1.8vw,19px);color:rgba(240,244,255,0.45);margin-top:20px;max-width:600px;line-height:1.7;padding:0 48px;}
 
-  /* ─── SECTIONS ─── */
-  section { position: relative; overflow: hidden; }
+/* ─── THREE.JS DEVICE SECTION ─── */
+#device-section{height:100vh;position:relative;overflow:hidden;background:var(--void);}
+#device-three{position:absolute;inset:0;z-index:0;}
+.device-labels{position:absolute;inset:0;z-index:2;pointer-events:none;}
+.dlabel{position:absolute;display:flex;align-items:center;gap:12px;opacity:0;transform:translateX(-20px);transition:opacity 0.6s,transform 0.6s;}
+.dlabel.right{transform:translateX(20px);}
+.dlabel.visible{opacity:1;transform:translateX(0);}
+.dlabel-line{height:1px;width:70px;background:linear-gradient(to right,rgba(0,229,255,0.6),transparent);}
+.dlabel.right .dlabel-line{background:linear-gradient(to left,rgba(0,229,255,0.6),transparent);}
+.dlabel-text .t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--cyan);}
+.dlabel-text .s{font-size:12px;color:rgba(240,244,255,0.55);margin-top:2px;}
+.device-headline{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;z-index:2;}
+.device-headline h2{font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.04em;}
+.device-headline p{font-size:15px;color:rgba(240,244,255,0.45);margin-top:8px;}
 
-  /* ─── HERO ─── */
-  #hero {
-    height: 100vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center;
-    background: radial-gradient(ellipse 80% 60% at 50% 60%, rgba(0,100,220,0.18) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 40% at 50% 80%, rgba(0,229,255,0.08) 0%, transparent 60%),
-                var(--void);
-  }
-  #hero canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-  .hero-inner { position: relative; z-index: 2; }
-  .hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--cyan);
-    margin-bottom: 28px;
-    opacity: 0; transform: translateY(20px);
-    animation: fadeUp 0.9s 0.2s forwards;
-  }
-  .hero-eyebrow::before, .hero-eyebrow::after {
-    content: ''; display: block;
-    width: 28px; height: 1px;
-    background: currentColor; opacity: 0.5;
-  }
-  h1 {
-    font-size: clamp(52px, 8vw, 96px);
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    line-height: 1.0;
-    color: var(--white);
-    opacity: 0; transform: translateY(30px);
-    animation: fadeUp 0.9s 0.4s forwards;
-  }
-  h1 .accent { color: var(--cyan); }
-  .hero-tagline {
-    font-size: clamp(20px, 3vw, 28px);
-    font-weight: 300;
-    color: rgba(248,249,255,0.6);
-    margin-top: 20px;
-    letter-spacing: -0.01em;
-    opacity: 0; transform: translateY(20px);
-    animation: fadeUp 0.9s 0.6s forwards;
-  }
-  .hero-tagline em {
-    font-style: italic;
-    color: var(--cyan);
-    font-weight: 400;
-  }
-  .hero-ctas {
-    display: flex; gap: 14px; justify-content: center; align-items: center;
-    margin-top: 44px;
-    opacity: 0; transform: translateY(20px);
-    animation: fadeUp 0.9s 0.8s forwards;
-  }
-  .btn-primary {
-    background: var(--cyan);
-    color: #000;
-    padding: 14px 32px;
-    border-radius: 30px;
-    font-size: 17px; font-weight: 600;
-    border: none; cursor: pointer;
-    font-family: var(--font);
-    transition: transform 0.25s, box-shadow 0.25s;
-  }
-  .btn-primary:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 40px rgba(0,229,255,0.5);
-  }
-  .btn-ghost {
-    background: transparent;
-    color: var(--white);
-    padding: 14px 32px;
-    border-radius: 30px;
-    font-size: 17px; font-weight: 400;
-    border: 1px solid rgba(248,249,255,0.2);
-    cursor: pointer;
-    font-family: var(--font);
-    transition: border-color 0.25s, color 0.25s;
-  }
-  .btn-ghost:hover { border-color: rgba(248,249,255,0.6); color: var(--white); }
-  .scroll-cue {
-    position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: rgba(248,249,255,0.35);
-    opacity: 0; animation: fadeUp 1s 1.4s forwards;
-  }
-  .scroll-line {
-    width: 1px; height: 40px;
-    background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
-    animation: scrollPulse 2s ease-in-out infinite;
-  }
+/* ─── STATS STRIP ─── */
+#stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--deep);}
+.stat{padding:60px 40px;border-right:1px solid var(--border);opacity:0;transform:translateY(30px);transition:opacity 0.6s,transform 0.6s;}
+.stat:last-child{border-right:none;}
+.stat.in{opacity:1;transform:translateY(0);}
+.stat-n{font-size:52px;font-weight:700;letter-spacing:-0.04em;color:var(--cyan);line-height:1;}
+.stat-u{font-size:22px;}
+.stat-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:rgba(240,244,255,0.4);margin:8px 0;}
+.stat-d{font-size:13px;line-height:1.6;color:rgba(240,244,255,0.5);}
 
-  /* ─── 3D DEVICE SCENE ─── */
-  #device-scene {
-    height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--deep);
-    perspective: 1200px;
-  }
-  .scene-container {
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    width: 100%; height: 100%;
-  }
-  /* ─── CSS 3D Device ─── */
-  .device-wrapper {
-    position: relative;
-    transform-style: preserve-3d;
-    width: 180px; height: 320px;
-    transform: rotateY(-25deg) rotateX(8deg);
-    transition: transform 0.8s cubic-bezier(0.23,1,0.32,1);
-    filter: drop-shadow(0 40px 80px rgba(0,229,255,0.25));
-  }
-  .device-wrapper:hover {
-    transform: rotateY(0deg) rotateX(0deg);
-  }
-  /* Body - front */
-  .dev-face {
-    position: absolute;
-    border-radius: 28px;
-    backface-visibility: hidden;
-  }
-  .dev-front {
-    width: 180px; height: 320px;
-    background: linear-gradient(160deg, #1c1c2a 0%, #0d0d1a 100%);
-    border: 1px solid rgba(0,229,255,0.25);
-    top: 0; left: 0;
-    transform: translateZ(24px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 12px;
-    overflow: hidden;
-  }
-  .dev-front::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 30% 20%, rgba(0,229,255,0.08), transparent 60%);
-    pointer-events: none;
-  }
-  .dev-back {
-    width: 180px; height: 320px;
-    background: linear-gradient(160deg, #141420 0%, #0a0a14 100%);
-    border: 1px solid rgba(255,255,255,0.06);
-    top: 0; left: 0;
-    transform: translateZ(-24px) rotateY(180deg);
-  }
-  .dev-right {
-    width: 48px; height: 320px;
-    background: linear-gradient(to right, #141420, #1a1a28);
-    border: 1px solid rgba(255,255,255,0.04);
-    top: 0; left: 180px;
-    transform-origin: left center;
-    transform: rotateY(90deg) translateZ(0px);
-    border-radius: 0 28px 28px 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 24px; gap: 8px;
-  }
-  .dev-left {
-    width: 48px; height: 320px;
-    background: linear-gradient(to left, #141420, #1a1a28);
-    border: 1px solid rgba(255,255,255,0.04);
-    top: 0; left: 0;
-    transform-origin: right center;
-    transform: rotateY(-90deg) translateZ(0px);
-    border-radius: 28px 0 0 28px;
-  }
-  .dev-top {
-    width: 180px; height: 48px;
-    background: linear-gradient(to bottom, #1e1e2e, #151520);
-    border: 1px solid rgba(255,255,255,0.05);
-    top: 0; left: 0;
-    transform-origin: top center;
-    transform: rotateX(90deg) translateZ(0px);
-    border-radius: 28px 28px 0 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .dev-bottom {
-    width: 180px; height: 48px;
-    background: linear-gradient(to top, #1e1e2e, #151520);
-    border: 1px solid rgba(255,255,255,0.05);
-    top: 320px; left: 0;
-    transform-origin: bottom center;
-    transform: rotateX(-90deg) translateZ(0px);
-    border-radius: 0 0 28px 28px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  /* output port on bottom */
-  .port {
-    width: 40px; height: 6px;
-    background: var(--cyan);
-    border-radius: 3px;
-    box-shadow: 0 0 10px var(--cyan), 0 0 20px rgba(0,229,255,0.4);
-  }
-  /* water inlet on top */
-  .inlet {
-    width: 28px; height: 5px;
-    background: rgba(0,180,216,0.7);
-    border-radius: 3px;
-    box-shadow: 0 0 8px rgba(0,180,216,0.5);
-  }
-  /* front screen/display */
-  .dev-display {
-    width: 130px; height: 130px;
-    background: radial-gradient(ellipse at center, rgba(0,229,255,0.1) 0%, rgba(0,50,100,0.05) 100%);
-    border: 1px solid rgba(0,229,255,0.2);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-  }
-  .dev-display::after {
-    content: 'H₂';
-    font-size: 36px; font-weight: 700;
-    color: var(--cyan);
-    text-shadow: 0 0 20px var(--cyan), 0 0 40px rgba(0,229,255,0.6);
-    letter-spacing: -1px;
-  }
-  .dev-ring {
-    position: absolute; inset: -8px;
-    border: 1px solid rgba(0,229,255,0.15);
-    border-radius: 50%;
-    animation: ringPulse 3s ease-in-out infinite;
-  }
-  .dev-ring-2 {
-    position: absolute; inset: -18px;
-    border: 1px solid rgba(0,229,255,0.07);
-    border-radius: 50%;
-    animation: ringPulse 3s ease-in-out infinite 0.8s;
-  }
-  .dev-logo {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: rgba(248,249,255,0.4);
-  }
-  .dev-status {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 9px; color: var(--cyan); letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .status-dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 6px var(--cyan);
-    animation: blink 2s ease-in-out infinite;
-  }
-  /* right side buttons */
-  .side-btn {
-    width: 3px; height: 28px;
-    background: rgba(0,229,255,0.3);
-    border-radius: 2px;
-    box-shadow: 0 0 4px rgba(0,229,255,0.2);
-  }
+/* ─── HOW IT WORKS ─── */
+#how{padding:140px 0;background:var(--void);}
+.sec-eye{text-align:center;font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;}
+.sec-h{text-align:center;font-size:clamp(36px,5vw,64px);font-weight:700;letter-spacing:-0.04em;line-height:1.05;margin-bottom:16px;opacity:0;transform:translateY(30px);transition:opacity 0.8s,transform 0.8s;}
+.sec-h.in{opacity:1;transform:translateY(0);}
+.sec-sub{text-align:center;font-size:17px;color:rgba(240,244,255,0.45);max-width:560px;margin:0 auto 80px;line-height:1.6;}
 
-  /* floating labels around device */
-  .device-label {
-    position: absolute;
-    display: flex; align-items: center; gap: 8px;
-    opacity: 0;
-    transition: opacity 0.5s;
-    pointer-events: none;
-  }
-  .device-label.visible { opacity: 1; }
-  .device-label .label-line {
-    width: 60px; height: 1px;
-    background: linear-gradient(to right, transparent, rgba(0,229,255,0.5));
-  }
-  .device-label.right .label-line {
-    background: linear-gradient(to left, transparent, rgba(0,229,255,0.5));
-  }
-  .device-label .label-text {
-    font-size: 11px; font-weight: 500;
-    letter-spacing: 0.05em;
-    color: rgba(248,249,255,0.7);
-    white-space: nowrap;
-  }
-  .device-label .label-title {
-    font-size: 10px; font-weight: 600;
-    color: var(--cyan); text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
+/* Process timeline */
+.process{max-width:1100px;margin:0 auto;padding:0 48px;}
+.proc-row{display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;gap:32px;margin-bottom:0;}
+.proc-row:nth-child(even) .proc-content{order:3;}
+.proc-row:nth-child(even) .proc-visual{order:1;}
+.proc-row:nth-child(even) .proc-spine{order:2;}
+.proc-content{padding:48px 0;opacity:0;transform:translateX(-40px);transition:opacity 0.8s,transform 0.8s;}
+.proc-row:nth-child(even) .proc-content{transform:translateX(40px);}
+.proc-content.in{opacity:1;transform:translateX(0);}
+.proc-num{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--cyan);margin-bottom:12px;}
+.proc-content h3{font-size:clamp(24px,3vw,36px);font-weight:700;letter-spacing:-0.03em;margin-bottom:14px;line-height:1.1;}
+.proc-content p{font-size:15px;line-height:1.75;color:rgba(240,244,255,0.55);}
+.proc-content .detail-box{margin-top:24px;padding:18px 22px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:12px;}
+.proc-content .detail-box p{font-size:13px;color:rgba(240,244,255,0.45);}
+.proc-content .detail-box strong{color:var(--cyan);font-weight:600;}
+.proc-spine{display:flex;flex-direction:column;align-items:center;gap:0;}
+.spine-dot{width:14px;height:14px;border-radius:50%;background:var(--cyan);box-shadow:0 0 16px rgba(0,229,255,0.6);flex-shrink:0;}
+.spine-line{width:1px;flex:1;background:linear-gradient(to bottom,var(--cyan),rgba(0,229,255,0.1));min-height:120px;}
+.proc-visual{height:240px;background:rgba(240,244,255,0.02);border:1px solid var(--border);border-radius:20px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;opacity:0;transform:scale(0.95);transition:opacity 0.8s,transform 0.8s;}
+.proc-visual.in{opacity:1;transform:scale(1);}
+.proc-visual canvas{position:absolute;inset:0;}
+.visual-label{position:relative;z-index:2;text-align:center;}
+.visual-label .vl-big{font-size:48px;font-weight:700;letter-spacing:-0.04em;}
+.visual-label .vl-sub{font-size:12px;color:rgba(240,244,255,0.4);margin-top:4px;text-transform:uppercase;letter-spacing:0.1em;}
 
-  /* ─── FEATURE STRIP ─── */
-  #feature-strip {
-    padding: 0;
-    background: var(--deep);
-  }
-  .feat-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-  .feat-cell {
-    padding: 64px 48px;
-    border-right: 1px solid var(--border);
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.7s, transform 0.7s;
-  }
-  .feat-cell:last-child { border-right: none; }
-  .feat-cell.in { opacity: 1; transform: translateY(0); }
-  .feat-num {
-    font-size: 52px; font-weight: 700;
-    letter-spacing: -0.04em;
-    color: var(--cyan);
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-  .feat-unit { font-size: 20px; font-weight: 400; }
-  .feat-label {
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.1em;
-    color: rgba(248,249,255,0.5);
-    margin-bottom: 12px;
-  }
-  .feat-desc {
-    font-size: 14px; line-height: 1.6;
-    color: rgba(248,249,255,0.55);
-    max-width: 220px;
-  }
+/* ─── SCIENCE DEEP DIVE ─── */
+#science{padding:120px 0;background:var(--deep);}
+.science-grid{max-width:1100px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+.sci-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;opacity:0;transform:translateY(40px);transition:opacity 0.7s,transform 0.7s;}
+.sci-card.in{opacity:1;transform:translateY(0);}
+.sci-card:hover{border-color:rgba(0,229,255,0.2);background:rgba(0,229,255,0.03);}
+.sci-icon{width:48px;height:48px;border-radius:14px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:22px;}
+.sci-card h3{font-size:22px;font-weight:600;letter-spacing:-0.02em;margin-bottom:12px;}
+.sci-card p{font-size:14px;line-height:1.75;color:rgba(240,244,255,0.5);}
+.sci-card .sci-stat{margin-top:20px;padding-top:20px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:6px;}
+.sci-stat-n{font-size:32px;font-weight:700;color:var(--cyan);letter-spacing:-0.03em;}
+.sci-stat-l{font-size:12px;color:rgba(240,244,255,0.4);text-transform:uppercase;letter-spacing:0.08em;}
 
-  /* ─── HOW IT WORKS ─── */
-  #how {
-    padding: 140px 0;
-    background: var(--void);
-  }
-  .section-eyebrow {
-    text-align: center;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--cyan);
-    margin-bottom: 16px;
-  }
-  .section-title {
-    text-align: center;
-    font-size: clamp(36px, 5vw, 60px);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    margin-bottom: 80px;
-    opacity: 0; transform: translateY(30px);
-    transition: opacity 0.8s, transform 0.8s;
-  }
-  .section-title.in { opacity: 1; transform: translateY(0); }
+/* ─── THREE.JS MOLECULE SECTION ─── */
+#molecule-section{height:80vh;position:relative;background:var(--void);}
+#mol-three{position:absolute;inset:0;}
+.mol-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:8%;pointer-events:none;z-index:2;}
+.mol-text{max-width:400px;}
+.mol-text h2{font-size:clamp(32px,4vw,56px);font-weight:700;letter-spacing:-0.04em;line-height:1.05;margin-bottom:16px;}
+.mol-text p{font-size:15px;line-height:1.75;color:rgba(240,244,255,0.5);}
+.mol-eq{font-size:clamp(20px,3vw,36px);font-weight:700;letter-spacing:-0.02em;margin:20px 0;padding:16px 20px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:12px;font-family:monospace;}
+.mol-eq .w{color:var(--aqua);}
+.mol-eq .h{color:var(--cyan);}
+.mol-eq .o{color:#6699ff;}
 
-  .steps {
-    max-width: 1000px; margin: 0 auto;
-    padding: 0 48px;
-    display: grid; grid-template-columns: repeat(3,1fr); gap: 48px;
-  }
-  .step {
-    text-align: center;
-    opacity: 0; transform: translateY(50px);
-    transition: opacity 0.7s, transform 0.7s;
-  }
-  .step.in { opacity: 1; transform: translateY(0); }
-  .step-icon {
-    width: 80px; height: 80px;
-    margin: 0 auto 24px;
-    border-radius: 24px;
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .step-icon::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(0,85,255,0.08));
-    border: 1px solid rgba(0,229,255,0.2);
-    border-radius: 24px;
-  }
-  .step-icon svg { position: relative; z-index: 1; }
-  .step-num {
-    position: absolute; top: -6px; right: -6px;
-    width: 20px; height: 20px;
-    background: var(--cyan);
-    border-radius: 50%;
-    font-size: 10px; font-weight: 700;
-    color: #000;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 2;
-  }
-  .step h3 {
-    font-size: 20px; font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
-  }
-  .step p {
-    font-size: 14px; line-height: 1.65;
-    color: rgba(248,249,255,0.55);
-  }
-  .step-connector {
-    position: absolute;
-    top: 40px;
-    left: calc(50% + 40px);
-    width: calc(100% - 80px);
-    height: 1px;
-    background: linear-gradient(to right, var(--cyan), rgba(0,229,255,0));
-    opacity: 0.2;
-  }
+/* ─── SPECS ─── */
+#specs{padding:140px 0;background:var(--deep);}
+.specs-wrap{max-width:900px;margin:0 auto;padding:0 48px;}
+.specs-table{border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.spec-row{display:grid;grid-template-columns:240px 1fr;border-bottom:1px solid var(--border);opacity:0;transition:opacity 0.5s;}
+.spec-row:last-child{border-bottom:none;}
+.spec-row.in{opacity:1;}
+.spec-k{padding:20px 28px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:rgba(240,244,255,0.4);border-right:1px solid var(--border);display:flex;align-items:center;}
+.spec-v{padding:20px 28px;font-size:15px;font-weight:500;color:var(--white);display:flex;align-items:center;}
+.spec-row:hover{background:rgba(0,229,255,0.02);}
 
-  /* ─── ELECTROLYSIS VIS ─── */
-  #electrolysis {
-    height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--deep);
-    position: relative;
-  }
-  #electrolysis canvas {
-    position: absolute; inset: 0; z-index: 0;
-  }
-  .electrolysis-content {
-    position: relative; z-index: 2;
-    text-align: center; max-width: 600px;
-    padding: 0 24px;
-  }
-  .electrolysis-content h2 {
-    font-size: clamp(40px, 6vw, 72px);
-    font-weight: 700; letter-spacing: -0.04em; line-height: 1;
-    margin-bottom: 20px;
-  }
-  .electrolysis-content p {
-    font-size: 18px; line-height: 1.65;
-    color: rgba(248,249,255,0.6);
-  }
-  .molecule {
-    font-size: clamp(48px, 8vw, 88px);
-    letter-spacing: -0.02em;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 12px;
-  }
-  .molecule .h2o { color: var(--aqua); }
-  .molecule .arrow { color: rgba(248,249,255,0.2); font-size: 0.6em; }
-  .molecule .h2 { color: var(--cyan); }
-  .molecule .o2 { color: rgba(100,180,255,0.7); }
+/* ─── USE CASES ─── */
+#uses{padding:120px 0;background:var(--void);}
+.uses-grid{max-width:1100px;margin:40px auto 0;padding:0 48px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.use-card{padding:36px;background:var(--card);border:1px solid var(--border);border-radius:20px;opacity:0;transform:translateY(40px);transition:opacity 0.7s,transform 0.7s;cursor:default;}
+.use-card.in{opacity:1;transform:translateY(0);}
+.use-card:hover{border-color:rgba(0,229,255,0.2);transform:translateY(-4px)!important;}
+.use-icon{font-size:32px;margin-bottom:18px;}
+.use-card h3{font-size:18px;font-weight:600;letter-spacing:-0.02em;margin-bottom:10px;}
+.use-card p{font-size:13px;line-height:1.7;color:rgba(240,244,255,0.45);}
 
-  /* ─── SPECS ─── */
-  #specs {
-    padding: 140px 0;
-    background: var(--void);
-  }
-  .specs-grid {
-    max-width: 900px; margin: 0 auto;
-    padding: 0 48px;
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 0;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-  }
-  .spec-row {
-    display: contents;
-    opacity: 0;
-    transition: opacity 0.5s;
-  }
-  .spec-row.in .spec-key, .spec-row.in .spec-val { opacity: 1; transform: translateX(0); }
-  .spec-key, .spec-val {
-    padding: 24px 32px;
-    border-bottom: 1px solid var(--border);
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: opacity 0.5s, transform 0.5s;
-  }
-  .spec-val { transform: translateX(20px); }
-  .spec-key {
-    font-size: 13px; font-weight: 600;
-    color: rgba(248,249,255,0.5);
-    text-transform: uppercase; letter-spacing: 0.08em;
-    border-right: 1px solid var(--border);
-    display: flex; align-items: center;
-  }
-  .spec-val {
-    font-size: 17px; font-weight: 500;
-    color: var(--white);
-  }
+/* ─── PREORDER CTA ─── */
+#preorder{padding:160px 0;text-align:center;background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(0,70,200,0.1),transparent 70%),var(--void);position:relative;}
+#preorder-three{position:absolute;inset:0;opacity:0.3;}
+.preorder-inner{position:relative;z-index:2;}
+#preorder h2{font-size:clamp(44px,7vw,88px);font-weight:700;letter-spacing:-0.05em;line-height:0.95;margin-bottom:20px;}
+#preorder h2 .hl{color:var(--cyan);}
+#preorder .sub{font-size:18px;color:rgba(240,244,255,0.45);margin-bottom:16px;}
+.price-row{display:inline-flex;align-items:baseline;gap:4px;margin:24px 0 36px;}
+.pr-c{font-size:26px;font-weight:500;color:rgba(240,244,255,0.4);align-self:flex-start;margin-top:10px;}
+.pr-n{font-size:80px;font-weight:700;letter-spacing:-0.05em;line-height:1;}
+.pr-period{font-size:18px;color:rgba(240,244,255,0.4);}
+.preorder-btn{background:var(--cyan);color:#000;padding:18px 52px;border-radius:32px;font-size:19px;font-weight:700;border:none;cursor:pointer;font-family:var(--font);transition:transform 0.25s,box-shadow 0.25s;display:inline-flex;align-items:center;gap:10px;}
+.preorder-btn:hover{transform:scale(1.06);box-shadow:0 0 60px rgba(0,229,255,0.5);}
+.shipping-note{margin-top:18px;font-size:13px;color:rgba(240,244,255,0.3);}
 
-  /* ─── CTA HERO ─── */
-  #final-cta {
-    padding: 160px 0;
-    text-align: center;
-    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,85,255,0.12) 0%, transparent 70%),
-                var(--void);
-    position: relative;
-  }
-  #final-cta h2 {
-    font-size: clamp(44px, 7vw, 88px);
-    font-weight: 700; letter-spacing: -0.04em; line-height: 1;
-    margin-bottom: 20px;
-  }
-  #final-cta p {
-    font-size: 20px; color: rgba(248,249,255,0.55);
-    margin-bottom: 48px;
-  }
-  .price-block {
-    display: inline-flex; align-items: baseline; gap: 4px;
-    margin-bottom: 36px;
-  }
-  .price-cur { font-size: 24px; font-weight: 600; color: rgba(248,249,255,0.5); }
-  .price-num {
-    font-size: 72px; font-weight: 700;
-    letter-spacing: -0.04em;
-    color: var(--white);
-  }
+/* ─── MODAL ─── */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(3,3,10,0.85);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid rgba(0,229,255,0.15);border-radius:24px;padding:48px;width:min(520px,calc(100vw - 40px));position:relative;transform:scale(0.95) translateY(20px);transition:transform 0.35s cubic-bezier(0.23,1,0.32,1);}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-close{position:absolute;top:20px;right:20px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;cursor:pointer;color:rgba(240,244,255,0.5);font-size:18px;display:flex;align-items:center;justify-content:center;transition:background 0.2s,color 0.2s;}
+.modal-close:hover{background:rgba(255,255,255,0.12);color:var(--white);}
+.modal-eye{font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;}
+.modal h2{font-size:32px;font-weight:700;letter-spacing:-0.03em;margin-bottom:8px;}
+.modal .modal-sub{font-size:14px;color:rgba(240,244,255,0.45);margin-bottom:32px;line-height:1.6;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:rgba(240,244,255,0.4);margin-bottom:8px;}
+.field input,.field textarea,.field select{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px;color:var(--white);font-family:var(--font);font-size:15px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(0,229,255,0.4);box-shadow:0 0 0 3px rgba(0,229,255,0.08);}
+.field textarea{resize:none;height:100px;}
+.field select option{background:var(--surface);}
+.modal-submit{width:100%;background:var(--cyan);color:#000;border:none;padding:16px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);transition:transform 0.2s,box-shadow 0.2s;margin-top:8px;}
+.modal-submit:hover{transform:scale(1.02);box-shadow:0 0 30px rgba(0,229,255,0.4);}
+.modal-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+/* success state */
+.modal-success{display:none;text-align:center;padding:20px 0;}
+.modal-success.show{display:block;}
+.success-icon{font-size:56px;margin-bottom:20px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+.modal-success h3{font-size:26px;font-weight:700;letter-spacing:-0.03em;margin-bottom:10px;}
+.modal-success p{font-size:14px;color:rgba(240,244,255,0.5);line-height:1.7;}
+.modal-form-wrap{transition:opacity 0.3s,transform 0.3s;}
+.modal-form-wrap.hide{opacity:0;transform:scale(0.97);}
+.ref-num{display:inline-block;margin-top:16px;padding:8px 16px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:8px;font-size:13px;font-weight:600;color:var(--cyan);letter-spacing:0.1em;}
 
-  /* ─── FOOTER ─── */
-  footer {
-    padding: 48px;
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--void);
-  }
-  footer .f-logo { font-size: 15px; font-weight: 600; color: rgba(248,249,255,0.4); }
-  footer .f-logo span { color: var(--cyan); }
-  footer p { font-size: 12px; color: rgba(248,249,255,0.25); }
+/* ─── FOOTER ─── */
+footer{padding:60px 52px 40px;border-top:1px solid var(--border);background:var(--void);}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px;}
+.footer-logo{font-size:20px;font-weight:700;color:rgba(240,244,255,0.35);}
+.footer-logo span{color:var(--cyan);}
+.footer-tagline{font-size:12px;color:rgba(240,244,255,0.2);margin-top:6px;}
+.footer-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
+.footer-col h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:rgba(240,244,255,0.35);margin-bottom:14px;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:10px;}
+.footer-col ul li a{font-size:13px;color:rgba(240,244,255,0.4);text-decoration:none;transition:color 0.2s;}
+.footer-col ul li a:hover{color:var(--white);}
+.footer-bottom{padding-top:32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.footer-bottom p{font-size:11px;color:rgba(240,244,255,0.2);}
 
-  /* ─── PARTICLES (bubbles) ─── */
-  .bubble-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+@keyframes scrollAnim{0%,100%{opacity:0.2;}50%{opacity:1;}}
+@keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
 
-  /* ─── ANIMATIONS ─── */
-  @keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes scrollPulse {
-    0%,100% { opacity: 0.3; }
-    50% { opacity: 1; }
-  }
-  @keyframes ringPulse {
-    0%,100% { transform: scale(1); opacity: 0.6; }
-    50% { transform: scale(1.05); opacity: 1; }
-  }
-  @keyframes blink {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  @keyframes float {
-    0%,100% { transform: translateY(0px) rotateY(-25deg) rotateX(8deg); }
-    50% { transform: translateY(-12px) rotateY(-25deg) rotateX(8deg); }
-  }
-  @keyframes float-hover {
-    0%,100% { transform: translateY(0px) rotateY(5deg) rotateX(2deg); }
-    50% { transform: translateY(-10px) rotateY(-5deg) rotateX(-2deg); }
-  }
-  .device-wrapper.floating { animation: float 5s ease-in-out infinite; }
-  .device-wrapper.floating:hover { animation: float-hover 4s ease-in-out infinite; }
-
-  /* ─── SCROLL REVEAL DELAYS ─── */
-  .feat-cell:nth-child(2) { transition-delay: 0.1s; }
-  .feat-cell:nth-child(3) { transition-delay: 0.2s; }
-  .step:nth-child(2) { transition-delay: 0.15s; }
-  .step:nth-child(3) { transition-delay: 0.3s; }
-
-  @media (max-width: 768px) {
-    nav ul { display: none; }
-    .feat-grid { grid-template-columns: 1fr; }
-    .feat-cell { border-right: none; border-bottom: 1px solid var(--border); }
-    .steps { grid-template-columns: 1fr; gap: 36px; }
-    .specs-grid { grid-template-columns: 1fr; }
-    .spec-key { border-right: none; border-bottom: 1px solid var(--border); }
-    footer { flex-direction: column; gap: 12px; text-align: center; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  }
+@media(max-width:768px){
+  nav ul{display:none;}
+  #stats{grid-template-columns:1fr 1fr;}
+  .science-grid{grid-template-columns:1fr;}
+  .proc-row{grid-template-columns:1fr;}
+  .proc-spine{display:none;}
+  .uses-grid{grid-template-columns:1fr;}
+  footer{padding:40px 24px 28px;}
+  .footer-top{flex-direction:column;gap:32px;}
+  .footer-cols{grid-template-columns:1fr 1fr;}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}
+}
 </style>
 </head>
 <body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
 
 <!-- NAV -->
 <nav>
   <div class="logo">C<span>E</span>D</div>
   <ul>
-    <li><a href="#device-scene">Device</a></li>
-    <li><a href="#how">How it works</a></li>
+    <li><a href="#device-section">Device</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#science">Science</a></li>
     <li><a href="#specs">Specs</a></li>
+    <li><a href="#uses">Uses</a></li>
   </ul>
-  <button class="nav-cta">Order Now</button>
+  <button class="nav-btn" onclick="openModal()">Pre-order — $299</button>
 </nav>
 
 <!-- HERO -->
 <section id="hero">
-  <canvas id="hero-canvas"></canvas>
-  <div class="hero-inner">
-    <div class="hero-eyebrow">Introducing</div>
-    <h1>CED<br><span class="accent">Hydrogen,</span><br>Instantly.</h1>
-    <p class="hero-tagline">Say hi to <em>hydrogen</em></p>
-    <div class="hero-ctas">
-      <button class="btn-primary">Order Now — $299</button>
-      <button class="btn-ghost">Learn More ↓</button>
+  <div id="hero-three"></div>
+  <div class="hero-content">
+    <div class="eyebrow">Introducing CED</div>
+    <h1 class="hero-h">
+      <span class="c1">Say hi to</span>
+      <span class="c2">Hydrogen.</span>
+    </h1>
+    <p class="hero-sub">The world's most compact electrolysis device.<br>Pour water in. Get <em>pure hydrogen</em> out.</p>
+    <div class="hero-btns">
+      <button class="btn-p" onclick="openModal()">Pre-order Now — $299</button>
+      <button class="btn-g" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How it works ↓</button>
     </div>
   </div>
-  <div class="scroll-cue">
-    <span>Scroll</span>
-    <div class="scroll-line"></div>
-  </div>
-</section>
-
-<!-- 3D DEVICE SCENE -->
-<section id="device-scene">
-  <canvas class="bubble-canvas" id="bubble-canvas"></canvas>
-  <div class="scene-container">
-
-    <!-- Left labels -->
-    <div class="device-label" id="lbl-inlet" style="right: calc(50% + 160px); top: calc(50% - 120px); flex-direction: row-reverse;">
-      <div>
-        <div class="label-title">Water Inlet</div>
-        <div class="label-text">Pour any clean water</div>
-      </div>
-      <div class="label-line"></div>
-    </div>
-    <div class="device-label" id="lbl-cell" style="right: calc(50% + 180px); top: 50%; flex-direction: row-reverse;">
-      <div>
-        <div class="label-title">Electrolysis Cell</div>
-        <div class="label-text">PEM membrane core</div>
-      </div>
-      <div class="label-line"></div>
-    </div>
-
-    <!-- The Device -->
-    <div class="device-wrapper floating" id="device3d">
-      <div class="dev-face dev-front">
-        <div class="dev-logo">CED · H₂</div>
-        <div class="dev-display">
-          <div class="dev-ring"></div>
-          <div class="dev-ring-2"></div>
-        </div>
-        <div class="dev-status">
-          <div class="status-dot"></div>
-          Active
-        </div>
-      </div>
-      <div class="dev-face dev-back"></div>
-      <div class="dev-face dev-right">
-        <div class="side-btn"></div>
-        <div class="side-btn" style="height:16px"></div>
-      </div>
-      <div class="dev-face dev-left"></div>
-      <div class="dev-face dev-top">
-        <div class="inlet"></div>
-      </div>
-      <div class="dev-face dev-bottom">
-        <div class="port"></div>
-      </div>
-    </div>
-
-    <!-- Right labels -->
-    <div class="device-label" id="lbl-output" style="left: calc(50% + 160px); top: calc(50% + 80px);">
-      <div class="label-line"></div>
-      <div>
-        <div class="label-title">H₂ Output</div>
-        <div class="label-text">99.9% pure hydrogen gas</div>
-      </div>
-    </div>
-    <div class="device-label" id="lbl-charge" style="left: calc(50% + 180px); top: calc(50% - 40px);">
-      <div class="label-line"></div>
-      <div>
-        <div class="label-title">USB-C Power</div>
-        <div class="label-text">5V · 3A · Any charger</div>
-      </div>
-    </div>
-
+  <div class="scroll-hint">
+    <span>Discover</span>
+    <div class="scroll-bar"></div>
   </div>
 </section>
 
-<!-- FEATURE STRIP -->
-<section id="feature-strip">
-  <div class="feat-grid">
-    <div class="feat-cell">
-      <div class="feat-num">99.9<span class="feat-unit">%</span></div>
-      <div class="feat-label">Purity</div>
-      <div class="feat-desc">PEM membrane technology delivers pharmaceutical-grade hydrogen purity in every output.</div>
+<!-- TAGLINE BAND -->
+<section id="tagline-band">
+  <p class="big-tagline reveal">Hydrogen isn't the future.<br>With CED, it's <span class="hl">right now.</span></p>
+  <p class="tag-sub reveal">Electrolysis has powered industrial hydrogen production for over a century. We've compressed that same science into something you can hold in one hand — and actually afford.</p>
+</section>
+
+<!-- THREE.JS DEVICE SHOWCASE -->
+<section id="device-section">
+  <div id="device-three"></div>
+  <div class="device-labels">
+    <div class="dlabel" id="dl1" style="top:22%;left:8%;">
+      <div class="dlabel-text"><div class="t">Water Inlet</div><div class="s">Any clean water source</div></div>
+      <div class="dlabel-line"></div>
     </div>
-    <div class="feat-cell">
-      <div class="feat-num">&lt;30<span class="feat-unit">s</span></div>
-      <div class="feat-label">Time to H₂</div>
-      <div class="feat-desc">Pour water in and hydrogen flows out in under 30 seconds. No warmup, no waiting.</div>
+    <div class="dlabel" id="dl2" style="top:42%;left:6%;">
+      <div class="dlabel-text"><div class="t">PEM Cell</div><div class="s">Proton Exchange Membrane</div></div>
+      <div class="dlabel-line"></div>
     </div>
-    <div class="feat-cell">
-      <div class="feat-num">180<span class="feat-unit">g</span></div>
-      <div class="feat-label">Weight</div>
-      <div class="feat-desc">Lighter than your phone. Pocket-sized hydrogen generation, wherever you go.</div>
+    <div class="dlabel right" id="dl3" style="top:32%;right:8%;flex-direction:row-reverse;">
+      <div class="dlabel-line"></div>
+      <div class="dlabel-text" style="text-align:right"><div class="t">H₂ Output</div><div class="s">99.9% pure hydrogen</div></div>
     </div>
+    <div class="dlabel right" id="dl4" style="top:55%;right:6%;flex-direction:row-reverse;">
+      <div class="dlabel-line"></div>
+      <div class="dlabel-text" style="text-align:right"><div class="t">USB-C Power</div><div class="s">5V · 3A · Any charger</div></div>
+    </div>
+    <div class="dlabel right" id="dl5" style="top:68%;right:8%;flex-direction:row-reverse;">
+      <div class="dlabel-line"></div>
+      <div class="dlabel-text" style="text-align:right"><div class="t">Safety Valve</div><div class="s">Auto pressure relief</div></div>
+    </div>
+  </div>
+  <div class="device-headline">
+    <h2>180g. <span style="color:var(--cyan)">Infinite hydrogen.</span></h2>
+    <p>Drag to rotate · Scroll to zoom</p>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<section id="stats">
+  <div class="stat">
+    <div class="stat-n">99.9<span class="stat-u">%</span></div>
+    <div class="stat-l">Hydrogen Purity</div>
+    <div class="stat-d">Pharmaceutical-grade output using PEM membrane separation technology.</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n">&lt;30<span class="stat-u">s</span></div>
+    <div class="stat-l">Time to Output</div>
+    <div class="stat-d">From cold start to flowing hydrogen in under 30 seconds. No warmup cycles.</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n">50<span class="stat-u">mL/m</span></div>
+    <div class="stat-l">Flow Rate</div>
+    <div class="stat-d">Steady, consistent hydrogen flow for continuous or batch applications.</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n">180<span class="stat-u">g</span></div>
+    <div class="stat-l">Total Weight</div>
+    <div class="stat-d">Lighter than your phone. Fits in a jacket pocket or lab coat.</div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
 <section id="how">
-  <div class="section-eyebrow">The Science</div>
-  <h2 class="section-title" id="how-title">Electrolysis, simplified.</h2>
-  <div class="steps">
-    <div class="step" style="position:relative">
-      <div class="step-icon">
-        <span class="step-num">1</span>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <ellipse cx="18" cy="22" rx="10" ry="8" stroke="#00e5ff" stroke-width="1.5" fill="none" opacity="0.4"/>
-          <path d="M18 6 C18 6 10 16 10 22" stroke="#00b4d8" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M18 6 C18 6 26 16 26 22" stroke="#00b4d8" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="18" cy="6" r="2" fill="#00e5ff"/>
-        </svg>
+  <div class="sec-eye">The Process</div>
+  <h2 class="sec-h reveal">How CED works.</h2>
+  <p class="sec-sub">Four elegantly engineered stages. One seamless result.</p>
+  <div class="process">
+
+    <!-- Step 1 -->
+    <div class="proc-row">
+      <div class="proc-content reveal-left">
+        <div class="proc-num">Step 01 — Water Input</div>
+        <h3>Any water.<br>No prep needed.</h3>
+        <p>CED's pre-filter stage removes dissolved minerals, chlorine, and particulates before water reaches the electrolysis cell. Tap water, filtered water, or distilled — the device handles it all automatically. A built-in conductivity sensor continuously adjusts electrolysis parameters to compensate for water quality variations.</p>
+        <div class="detail-box">
+          <p>The inlet filter replaces itself every <strong>~500 cycles</strong>. A subtle LED on the device face indicates when a new cartridge is needed — available as a subscription or one-time purchase.</p>
+        </div>
       </div>
-      <h3>Add Water</h3>
-      <p>Pour clean tap or distilled water into the inlet port on top. That's the only ingredient you need.</p>
+      <div class="proc-spine">
+        <div class="spine-dot"></div>
+        <div class="spine-line"></div>
+      </div>
+      <div class="proc-visual reveal-right">
+        <canvas id="vis1"></canvas>
+        <div class="visual-label">
+          <div class="vl-big" style="color:var(--aqua);">H₂O</div>
+          <div class="vl-sub">Input</div>
+        </div>
+      </div>
     </div>
-    <div class="step" style="position:relative">
-      <div class="step-icon">
-        <span class="step-num">2</span>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <rect x="8" y="14" width="20" height="8" rx="2" stroke="#00e5ff" stroke-width="1.5" fill="none"/>
-          <line x1="18" y1="14" x2="18" y2="8" stroke="#0055ff" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="18" y1="22" x2="18" y2="28" stroke="#0055ff" stroke-width="1.5" stroke-linecap="round"/>
-          <circle cx="18" cy="6" r="2" fill="#0055ff"/>
-          <circle cx="18" cy="30" r="2" fill="#0055ff"/>
-          <text x="13" y="21" fill="#00e5ff" font-size="7" font-family="sans-serif">H₂O</text>
-        </svg>
+
+    <!-- Step 2 -->
+    <div class="proc-row">
+      <div class="proc-visual reveal-left">
+        <canvas id="vis2"></canvas>
+        <div class="visual-label">
+          <div class="vl-big" style="color:var(--blue);font-size:36px;">⚡</div>
+          <div class="vl-sub">Electrolysis Cell</div>
+        </div>
       </div>
-      <h3>Electrolysis</h3>
-      <p>Our PEM cell splits water molecules using a low-voltage current, separating hydrogen from oxygen.</p>
+      <div class="proc-spine">
+        <div class="spine-dot"></div>
+        <div class="spine-line"></div>
+      </div>
+      <div class="proc-content reveal-right">
+        <div class="proc-num">Step 02 — Electrolysis</div>
+        <h3>The split.<br>Water becomes gas.</h3>
+        <p>At the heart of CED is a Proton Exchange Membrane (PEM) electrolyser cell. When current flows through the cell, water molecules at the anode are oxidised — splitting into oxygen gas, protons (H⁺ ions), and electrons. The protons migrate through the solid polymer membrane to the cathode, where they recombine with electrons to form hydrogen gas (H₂).</p>
+        <div class="detail-box">
+          <p>CED operates at <strong>1.8–2.2V per cell</strong>, carefully controlled by its onboard microcontroller to maximise efficiency while preventing membrane degradation. The process is entirely chemical-free — no reagents, no acids, no catalysts beyond the membrane itself.</p>
+        </div>
+      </div>
     </div>
-    <div class="step">
-      <div class="step-icon">
-        <span class="step-num">3</span>
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="22" r="6" stroke="#00e5ff" stroke-width="1.5" fill="rgba(0,229,255,0.08)"/>
-          <circle cx="18" cy="22" r="2" fill="#00e5ff"/>
-          <path d="M18 16 L18 8 M14 12 L18 8 L22 12" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <text x="14" y="25" fill="#00e5ff" font-size="7" font-family="sans-serif">H₂</text>
-        </svg>
+
+    <!-- Step 3 -->
+    <div class="proc-row">
+      <div class="proc-content reveal-left">
+        <div class="proc-num">Step 03 — Separation</div>
+        <h3>Pure gas.<br>Oxygen exits. Hydrogen flows.</h3>
+        <p>The PEM membrane acts as a selective barrier. Only protons can pass through it — oxygen produced at the anode is vented safely from the side of the device, while hydrogen collects at the cathode and is channelled to the output port. A micro moisture trap removes any residual water vapour, delivering dry hydrogen gas.</p>
+        <div class="detail-box">
+          <p>Output purity is <strong>≥99.9%</strong> hydrogen by volume. A built-in pressure sensor monitors the output channel and automatically throttles current if back-pressure builds — protecting both the device and your application.</p>
+        </div>
       </div>
-      <h3>Pure Hydrogen</h3>
-      <p>99.9% pure hydrogen gas flows through the output port, ready to use immediately.</p>
+      <div class="proc-spine">
+        <div class="spine-dot"></div>
+        <div class="spine-line"></div>
+      </div>
+      <div class="proc-visual reveal-right">
+        <canvas id="vis3"></canvas>
+        <div class="visual-label">
+          <div class="vl-big" style="color:var(--cyan);">H₂</div>
+          <div class="vl-sub">99.9% Pure</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="proc-row">
+      <div class="proc-visual reveal-left">
+        <canvas id="vis4"></canvas>
+        <div class="visual-label">
+          <div class="vl-big" style="color:var(--cyan);font-size:32px;">✓ Safe</div>
+          <div class="vl-sub">Active Safety Systems</div>
+        </div>
+      </div>
+      <div class="proc-spine">
+        <div class="spine-dot"></div>
+      </div>
+      <div class="proc-content reveal-right">
+        <div class="proc-num">Step 04 — Safety & Control</div>
+        <h3>Smart.<br>Safe by design.</h3>
+        <p>CED's embedded ARM microcontroller runs continuous diagnostics throughout operation. Temperature, pressure, voltage, current, and gas flow are sampled 100 times per second. If any parameter leaves a safe operating window, the device shuts down in under 10ms — faster than you can blink. The housing is rated IP54 for splash resistance, and the entire device is CE, FCC, and RoHS certified.</p>
+        <div class="detail-box">
+          <p>Hydrogen is flammable above <strong>4% concentration in air</strong>. CED's output flow rate is calibrated to remain below this threshold in standard ventilated spaces, and a catalytic recombiner in the device prevents any residual hydrogen from accumulating internally.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SCIENCE DEEP DIVE -->
+<section id="science">
+  <div class="sec-eye">The Science</div>
+  <h2 class="sec-h reveal">Built on a century of chemistry.</h2>
+  <p class="sec-sub">PEM electrolysis isn't new — it's just never been this small.</p>
+  <div class="science-grid">
+    <div class="sci-card reveal">
+      <div class="sci-icon">⚗️</div>
+      <h3>Proton Exchange Membrane</h3>
+      <p>The PEM is a solid polymer electrolyte — typically Nafion® — that conducts protons (H⁺) while blocking electrons and gases. First developed by General Electric in the 1960s for NASA, it's now the gold standard for compact, high-purity hydrogen production. At just 0.1–0.2mm thick, it's the reason CED can be pocket-sized.</p>
+      <div class="sci-stat"><span class="sci-stat-n">0.15</span><span class="sci-stat-l">mm membrane thickness</span></div>
+    </div>
+    <div class="sci-card reveal">
+      <div class="sci-icon">⚡</div>
+      <h3>Faraday's Laws Applied</h3>
+      <p>According to Faraday's second law of electrolysis, 96,485 coulombs of charge produces one mole of hydrogen (2g). CED's cell draws ~9W and produces hydrogen at an efficiency of 65–70% (LHV basis) — comparable to industrial PEM electrolysers, in a fraction of the size. The remaining energy is dissipated as gentle heat, removed by a passive thermal spreader.</p>
+      <div class="sci-stat"><span class="sci-stat-n">65</span><span class="sci-stat-l">% energy efficiency (LHV)</span></div>
+    </div>
+    <div class="sci-card reveal">
+      <div class="sci-icon">🔬</div>
+      <h3>Iridium Oxide Catalyst</h3>
+      <p>The anode catalyst — where oxygen evolution happens — uses iridium oxide nanoparticles. Iridium is one of only a handful of materials stable enough to survive the harsh oxidative conditions at the anode. CED uses just 0.3mg/cm² of iridium loading, minimising cost while maintaining performance over thousands of cycles.</p>
+      <div class="sci-stat"><span class="sci-stat-n">0.3</span><span class="sci-stat-l">mg/cm² iridium loading</span></div>
+    </div>
+    <div class="sci-card reveal">
+      <div class="sci-icon">🌡️</div>
+      <h3>Thermal Management</h3>
+      <p>PEM cells perform best at 60–80°C. CED's microcontroller uses pulse-width modulation of the cell current to keep temperature in this window. A copper heat spreader transfers warmth to the aluminium housing, which acts as a passive radiator. The result: stable, consistent hydrogen output even after hours of continuous operation.</p>
+      <div class="sci-stat"><span class="sci-stat-n">70°C</span><span class="sci-stat-l">optimal operating temp</span></div>
     </div>
   </div>
 </section>
 
-<!-- ELECTROLYSIS ANIMATION -->
-<section id="electrolysis">
-  <canvas id="elec-canvas"></canvas>
-  <div class="electrolysis-content">
-    <div class="molecule">
-      <span class="h2o">H₂O</span>
-      <span class="arrow"> → </span>
-      <span class="h2">H₂</span>
-      <span class="arrow"> + </span>
-      <span class="o2">½O₂</span>
+<!-- THREE.JS MOLECULE VIEWER -->
+<section id="molecule-section">
+  <div id="mol-three"></div>
+  <div class="mol-overlay">
+    <div class="mol-text reveal-right">
+      <div class="sec-eye" style="text-align:left;">The Reaction</div>
+      <h2>2H₂O → 2H₂ + O₂</h2>
+      <div class="mol-eq"><span class="w">2H₂O</span> → <span class="h">2H₂</span> + <span class="o">O₂</span></div>
+      <p>Every water molecule you put in yields two hydrogen molecules out. The oxygen is released safely to the air — the same oxygen that's already in the air around you. Hydrogen is the only output that matters.</p>
     </div>
-    <h2>Water in.<br>Hydrogen out.</h2>
-    <p>The CED uses proton exchange membrane electrolysis — the same technology trusted in industrial applications, now in your hand.</p>
   </div>
 </section>
 
 <!-- SPECS -->
 <section id="specs">
-  <div class="section-eyebrow">Specifications</div>
-  <h2 class="section-title" id="specs-title">Built to impress.</h2>
-  <div class="specs-grid">
-    <div class="spec-row" id="sr1"><div class="spec-key">Model</div><div class="spec-val">CED-1 Compact</div></div>
-    <div class="spec-row" id="sr2"><div class="spec-key">Technology</div><div class="spec-val">PEM Electrolysis</div></div>
-    <div class="spec-row" id="sr3"><div class="spec-key">Hydrogen Purity</div><div class="spec-val">≥99.9%</div></div>
-    <div class="spec-row" id="sr4"><div class="spec-key">Flow Rate</div><div class="spec-val">50 mL/min</div></div>
-    <div class="spec-row" id="sr5"><div class="spec-key">Input Power</div><div class="spec-val">USB-C · 5V / 3A</div></div>
-    <div class="spec-row" id="sr6"><div class="spec-key">Water Type</div><div class="spec-val">Tap or Distilled</div></div>
-    <div class="spec-row" id="sr7"><div class="spec-key">Dimensions</div><div class="spec-val">120 × 60 × 28 mm</div></div>
-    <div class="spec-row" id="sr8"><div class="spec-key">Weight</div><div class="spec-val">180 g</div></div>
-    <div class="spec-row" id="sr9"><div class="spec-key">Start Time</div><div class="spec-val">&lt; 30 seconds</div></div>
-    <div class="spec-row" id="sr10"><div class="spec-key">Certifications</div><div class="spec-val">CE · FCC · RoHS</div></div>
+  <div class="sec-eye">Specifications</div>
+  <h2 class="sec-h reveal">Every detail, documented.</h2>
+  <div class="specs-wrap">
+    <div class="specs-table">
+      <div class="spec-row"><div class="spec-k">Model</div><div class="spec-v">CED-1 Compact</div></div>
+      <div class="spec-row"><div class="spec-k">Technology</div><div class="spec-v">PEM (Proton Exchange Membrane) Electrolysis</div></div>
+      <div class="spec-row"><div class="spec-k">Hydrogen Purity</div><div class="spec-v">≥ 99.9% (H₂ by volume)</div></div>
+      <div class="spec-row"><div class="spec-k">Flow Rate</div><div class="spec-v">50 mL/min at standard conditions</div></div>
+      <div class="spec-row"><div class="spec-k">Input Power</div><div class="spec-v">USB-C · 5V / 3A (15W)</div></div>
+      <div class="spec-row"><div class="spec-k">Cell Voltage</div><div class="spec-v">1.8 – 2.2V (auto-regulated)</div></div>
+      <div class="spec-row"><div class="spec-k">Operating Temp</div><div class="spec-v">5°C – 40°C ambient</div></div>
+      <div class="spec-row"><div class="spec-k">Water Requirement</div><div class="spec-v">Tap, filtered, or distilled. TDS &lt; 500 ppm</div></div>
+      <div class="spec-row"><div class="spec-k">Water Consumption</div><div class="spec-v">~0.9 mL per mL of H₂ produced</div></div>
+      <div class="spec-row"><div class="spec-k">Output Pressure</div><div class="spec-v">0 – 0.5 bar gauge (regulated)</div></div>
+      <div class="spec-row"><div class="spec-k">Start Time</div><div class="spec-v">&lt; 30 seconds from cold</div></div>
+      <div class="spec-row"><div class="spec-k">Dimensions</div><div class="spec-v">120 × 60 × 28 mm</div></div>
+      <div class="spec-row"><div class="spec-k">Weight</div><div class="spec-v">180 g (without water)</div></div>
+      <div class="spec-row"><div class="spec-k">Housing</div><div class="spec-v">Anodised aluminium · IP54 rated</div></div>
+      <div class="spec-row"><div class="spec-k">Display</div><div class="spec-v">RGB status indicator + OLED purity readout</div></div>
+      <div class="spec-row"><div class="spec-k">Filter Life</div><div class="spec-v">~500 cycles (~6 months typical use)</div></div>
+      <div class="spec-row"><div class="spec-k">Cell Lifespan</div><div class="spec-v">5,000+ operating hours</div></div>
+      <div class="spec-row"><div class="spec-k">Certifications</div><div class="spec-v">CE · FCC · RoHS · IP54</div></div>
+      <div class="spec-row"><div class="spec-k">Warranty</div><div class="spec-v">2 years limited</div></div>
+      <div class="spec-row"><div class="spec-k">In the box</div><div class="spec-v">CED-1 · USB-C cable · 3× filter cartridges · Quick start guide</div></div>
+    </div>
   </div>
 </section>
 
-<!-- FINAL CTA -->
-<section id="final-cta">
-  <div class="section-eyebrow">Available Now</div>
-  <h2>Meet your hydrogen.<br><span style="color:var(--cyan)">CED.</span></h2>
-  <p>The world's most compact electrolysis device. In your hand.</p>
-  <div class="price-block">
-    <span class="price-cur">$</span>
-    <span class="price-num">299</span>
+<!-- USE CASES -->
+<section id="uses">
+  <div class="sec-eye">Applications</div>
+  <h2 class="sec-h reveal">What will you do with hydrogen?</h2>
+  <p class="sec-sub">From everyday wellness to serious research, CED opens the door.</p>
+  <div class="uses-grid">
+    <div class="use-card reveal">
+      <div class="use-icon">🔬</div>
+      <h3>Laboratory Research</h3>
+      <p>Replace costly compressed hydrogen cylinders in research settings. Perfect for gas chromatography carrier gas, hydrogenation reactions, and fuel cell testing at bench scale. Produces on-demand — no storage, no safety permits required for cylinders.</p>
+    </div>
+    <div class="use-card reveal">
+      <div class="use-icon">⚗️</div>
+      <h3>Hydrogen Water</h3>
+      <p>Infuse drinking water with dissolved molecular hydrogen — a growing area of consumer health research. CED produces the hydrogen; you control the infusion. Pure, consistent, and produced fresh each time — no stale canisters, no dissolved metal contamination.</p>
+    </div>
+    <div class="use-card reveal">
+      <div class="use-icon">🔋</div>
+      <h3>Fuel Cell Feeds</h3>
+      <p>Prototype and test small PEM fuel cells without the complexity of cylinder regulators. CED's regulated 0–0.5 bar output is ideal for micro fuel cell developers who need a clean, consistent hydrogen source at the bench.</p>
+    </div>
+    <div class="use-card reveal">
+      <div class="use-icon">🌱</div>
+      <h3>Agricultural Studies</h3>
+      <p>Researchers exploring hydrogen's effects on plant growth, seed germination, and stress resistance now have a portable, precise gas source for controlled experiments in the field or greenhouse — no lab tethering required.</p>
+    </div>
+    <div class="use-card reveal">
+      <div class="use-icon">🎓</div>
+      <h3>Education</h3>
+      <p>Make electrolysis tangible. CED brings the Faraday equation to life in classrooms and maker spaces — students can observe gas evolution, measure flow rate, and calculate efficiency in real time. Safe enough for secondary school labs.</p>
+    </div>
+    <div class="use-card reveal">
+      <div class="use-icon">🚁</div>
+      <h3>Field & Remote Use</h3>
+      <p>With USB-C power, CED runs from a solar panel, power bank, or vehicle USB. Researchers, emergency responders, and off-grid enthusiasts can carry a compact hydrogen source anywhere there's water — no infrastructure needed.</p>
+    </div>
   </div>
-  <br>
-  <button class="btn-primary" style="font-size:19px;padding:16px 44px;">Order CED — Ships June 2025</button>
+</section>
+
+<!-- PRE-ORDER CTA -->
+<section id="preorder">
+  <div id="preorder-three"></div>
+  <div class="preorder-inner">
+    <div class="sec-eye">Available Now</div>
+    <h2>Meet <span class="hl">CED.</span><br>Your hydrogen.</h2>
+    <p class="sub">The world's most compact electrolysis device.</p>
+    <div class="price-row">
+      <span class="pr-c">$</span>
+      <span class="pr-n">299</span>
+    </div>
+    <br>
+    <button class="preorder-btn" onclick="openModal()">
+      ✦ Reserve Yours Now
+    </button>
+    <p class="shipping-note">Ships Q3 2025 · Free worldwide shipping · 2-year warranty included</p>
+  </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <div class="f-logo">C<span>E</span>D</div>
-  <p>© 2025 CED Technologies Ltd · Compact Electrolysis Device</p>
-  <p style="color:rgba(248,249,255,0.2);font-size:11px">For research and consumer use · Not medical advice</p>
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo">C<span>E</span>D</div>
+      <div class="footer-tagline">Compact Electrolysis Device · Say hi to hydrogen</div>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#device-section">The Device</a></li>
+          <li><a href="#how">How It Works</a></li>
+          <li><a href="#specs">Specifications</a></li>
+          <li><a href="#uses">Applications</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Science</h4>
+        <ul>
+          <li><a href="#science">PEM Technology</a></li>
+          <li><a href="#molecule-section">The Reaction</a></li>
+          <li><a href="#">Safety Data Sheet</a></li>
+          <li><a href="#">Research Papers</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About CED</a></li>
+          <li><a href="#">Press Kit</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#" onclick="openModal();return false;">Pre-order</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 CED Technologies Ltd. All rights reserved.</p>
+    <p>For research and consumer use · Not intended as medical advice · Keep away from ignition sources</p>
+  </div>
 </footer>
 
+<!-- PRE-ORDER MODAL -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-form-wrap" id="modal-form-wrap">
+      <div class="modal-eye">Pre-order · Limited Early Access</div>
+      <h2>Reserve your CED</h2>
+      <p class="modal-sub">Secure your place in the first production run. Early backers lock in $299 — price increases to $349 at launch. Ships Q3 2025.</p>
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="f-name" placeholder="Your name" />
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="f-email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Intended Use</label>
+        <select id="f-use">
+          <option value="">Select your primary application...</option>
+          <option>Laboratory / Research</option>
+          <option>Education</option>
+          <option>Hydrogen Water</option>
+          <option>Fuel Cell Development</option>
+          <option>Agricultural Research</option>
+          <option>Field / Remote Use</option>
+          <option>General / Curiosity</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Message (optional)</label>
+        <textarea id="f-msg" placeholder="Tell us about your project or any questions you have..."></textarea>
+      </div>
+      <button class="modal-submit" id="modal-submit-btn" onclick="submitOrder()">Reserve My CED — $299</button>
+    </div>
+    <div class="modal-success" id="modal-success">
+      <div class="success-icon">⚡</div>
+      <h3>You're in. Welcome to hydrogen.</h3>
+      <p>Your pre-order reservation is confirmed. We'll send a confirmation to your email with your place in the production queue and payment details ahead of shipping.</p>
+      <div class="ref-num" id="ref-num">REF #CED-XXXXX</div>
+      <p style="margin-top:16px;font-size:12px;color:rgba(240,244,255,0.3);">Expected ship date: Q3 2025 · You'll receive tracking when dispatched</p>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ═══════════════════════════════════════
-   HERO PARTICLE FIELD
-═══════════════════════════════════════ */
-(function() {
-  const canvas = document.getElementById('hero-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  class Particle {
-    constructor() { this.reset(); }
-    reset() {
-      this.x = Math.random() * W;
-      this.y = Math.random() * H;
-      this.r = Math.random() * 1.8 + 0.3;
-      this.vx = (Math.random() - 0.5) * 0.3;
-      this.vy = -Math.random() * 0.5 - 0.1;
-      this.alpha = Math.random() * 0.5 + 0.1;
-      this.cyan = Math.random() > 0.6;
-    }
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
-      if (this.y < -10) this.reset(), this.y = H + 5;
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-      ctx.fillStyle = this.cyan
-        ? `rgba(0,229,255,${this.alpha})`
-        : `rgba(80,130,255,${this.alpha * 0.6})`;
-      ctx.fill();
-    }
-  }
-
-  for (let i = 0; i < 120; i++) particles.push(new Particle());
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    particles.forEach(p => { p.update(); p.draw(); });
-    // subtle connection lines
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i+1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const d = Math.sqrt(dx*dx+dy*dy);
-        if (d < 90) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(0,229,255,${(1-d/90)*0.06})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-        }
-      }
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
+/* ═══════════════════════════════════════════════════
+   CUSTOM CURSOR
+═══════════════════════════════════════════════════ */
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx+'px';
+  cursor.style.top=my+'px';
+});
+(function animCursor(){
+  rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12;
+  cursorRing.style.left=rx+'px'; cursorRing.style.top=ry+'px';
+  requestAnimationFrame(animCursor);
 })();
+document.querySelectorAll('button,a,input,textarea,select,.use-card,.sci-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('cursor-hover'));
+});
 
-/* ═══════════════════════════════════════
-   DEVICE SCENE BUBBLES
-═══════════════════════════════════════ */
-(function() {
-  const canvas = document.getElementById('bubble-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, bubbles = [];
+/* ═══════════════════════════════════════════════════
+   THREE.JS HERO — PARTICLE FIELD
+═══════════════════════════════════════════════════ */
+(function(){
+  const container = document.getElementById('hero-three');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 40;
+  const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
 
-  function resize() {
-    W = canvas.width = canvas.offsetWidth;
-    H = canvas.height = canvas.offsetHeight;
+  // Particles
+  const count = 2000;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  const col = new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    pos[i*3]=(Math.random()-0.5)*120;
+    pos[i*3+1]=(Math.random()-0.5)*80;
+    pos[i*3+2]=(Math.random()-0.5)*60;
+    const isCyan=Math.random()>0.4;
+    col[i*3]=isCyan?0:0.2;
+    col[i*3+1]=isCyan?0.9:0.3;
+    col[i*3+2]=isCyan?1:1;
   }
-  resize();
-  window.addEventListener('resize', resize);
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const mat = new THREE.PointsMaterial({size:0.25,vertexColors:true,transparent:true,opacity:0.7});
+  const pts = new THREE.Points(geo,mat);
+  scene.add(pts);
 
-  class Bubble {
-    constructor() { this.reset(); }
-    reset() {
-      this.x = W/2 + (Math.random()-0.5)*200;
-      this.y = H * 0.75 + Math.random() * 60;
-      this.r = Math.random() * 6 + 2;
-      this.vy = -(Math.random() * 1.5 + 0.5);
-      this.vx = (Math.random() - 0.5) * 0.4;
-      this.alpha = Math.random() * 0.5 + 0.2;
-      this.life = 0;
-      this.maxLife = Math.random() * 150 + 100;
-    }
-    update() {
-      this.life++;
-      this.x += this.vx + Math.sin(this.life * 0.05) * 0.3;
-      this.y += this.vy;
-      this.alpha = Math.sin((this.life / this.maxLife) * Math.PI) * 0.6;
-      if (this.life > this.maxLife) this.reset();
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
-      ctx.strokeStyle = `rgba(0,229,255,${this.alpha})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // inner glow
-      const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
-      g.addColorStop(0, `rgba(0,229,255,${this.alpha * 0.3})`);
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.fill();
-    }
-  }
-
-  for (let i = 0; i < 60; i++) {
-    const b = new Bubble();
-    b.life = Math.random() * b.maxLife; // stagger
-    bubbles.push(b);
-  }
-
-  let scene = document.getElementById('device-scene');
-  let animating = false;
-  const obs = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && !animating) {
-      animating = true;
-      draw();
-      // show labels
-      setTimeout(() => {
-        ['lbl-inlet','lbl-cell','lbl-output','lbl-charge'].forEach((id,i) => {
-          setTimeout(() => {
-            const el = document.getElementById(id);
-            if (el) el.classList.add('visible');
-          }, i * 200);
-        });
-      }, 500);
-    }
-  }, { threshold: 0.3 });
-  obs.observe(scene);
-
-  function draw() {
-    if (!animating) return;
-    ctx.clearRect(0, 0, W, H);
-    bubbles.forEach(b => { b.update(); b.draw(); });
-    requestAnimationFrame(draw);
-  }
-})();
-
-/* ═══════════════════════════════════════
-   ELECTROLYSIS CANVAS — SPLITTING WATER
-═══════════════════════════════════════ */
-(function() {
-  const canvas = document.getElementById('elec-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H;
-  let particles = [];
-  let animating = false;
-  let t = 0;
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  class ElecParticle {
-    constructor(side) {
-      // side: 'h2' (left, cyan) or 'o2' (right, blue)
-      this.side = side;
-      this.reset();
-    }
-    reset() {
-      // start near center
-      this.x = W/2 + (Math.random()-0.5)*40;
-      this.y = H/2 + (Math.random()-0.5)*40;
-      this.tx = this.side === 'h2'
-        ? W * 0.2 + Math.random() * W * 0.2
-        : W * 0.6 + Math.random() * W * 0.2;
-      this.ty = Math.random() * H;
-      this.progress = 0;
-      this.speed = Math.random() * 0.006 + 0.003;
-      this.r = Math.random() * 4 + 1.5;
-      this.alpha = 0;
-      this.label = this.side === 'h2' ? 'H₂' : 'O₂';
-    }
-    update() {
-      this.progress += this.speed;
-      if (this.progress >= 1) { this.reset(); return; }
-      this.alpha = Math.sin(this.progress * Math.PI) * 0.7;
-      this.cx = this.x + (this.tx - this.x) * this.easeInOut(this.progress);
-      this.cy = this.y + (this.ty - this.y) * this.easeInOut(this.progress);
-    }
-    easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.cx, this.cy, this.r, 0, Math.PI*2);
-      const color = this.side === 'h2' ? `rgba(0,229,255,${this.alpha})` : `rgba(80,150,255,${this.alpha * 0.7})`;
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    }
-  }
-
-  for (let i = 0; i < 50; i++) {
-    const p = new ElecParticle(Math.random() > 0.33 ? 'h2' : 'o2');
-    p.progress = Math.random();
-    particles.push(p);
-  }
-
-  // Central "membrane" line
-  function drawMembrane() {
-    const x = W/2;
-    const pulse = Math.sin(t * 0.05) * 0.3 + 0.7;
-    ctx.beginPath();
-    ctx.moveTo(x, H*0.1);
-    ctx.lineTo(x, H*0.9);
-    ctx.strokeStyle = `rgba(0,229,255,${0.15 * pulse})`;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 8]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  function draw() {
-    if (!animating) return;
-    ctx.clearRect(0, 0, W, H);
-    t++;
-    drawMembrane();
-    particles.forEach(p => { p.update(); p.draw(); });
-    requestAnimationFrame(draw);
-  }
-
-  const obs = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && !animating) {
-      animating = true;
-      draw();
-    }
-  }, { threshold: 0.3 });
-  obs.observe(document.getElementById('electrolysis'));
-})();
-
-/* ═══════════════════════════════════════
-   MOUSE PARALLAX ON DEVICE
-═══════════════════════════════════════ */
-(function() {
-  const device = document.getElementById('device3d');
-  const scene = document.getElementById('device-scene');
-  let baseRX = 8, baseRY = -25;
-  let mouseX = 0, mouseY = 0;
-  let curX = baseRX, curY = baseRY;
-
-  scene.addEventListener('mousemove', e => {
-    const rect = scene.getBoundingClientRect();
-    mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-    mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  // Mouse influence
+  let mouseX=0,mouseY=0;
+  document.addEventListener('mousemove',e=>{
+    mouseX=(e.clientX/window.innerWidth-0.5)*2;
+    mouseY=(e.clientY/window.innerHeight-0.5)*2;
   });
-  scene.addEventListener('mouseleave', () => { mouseX = 0; mouseY = 0; });
 
-  function animate() {
-    const tRX = baseRX - mouseY * 15;
-    const tRY = baseRY + mouseX * 25;
-    curX += (tRX - curX) * 0.05;
-    curY += (tRY - curY) * 0.05;
-    device.style.transform = `translateY(${Math.sin(Date.now()*0.001)*-8}px) rotateY(${curY}deg) rotateX(${curX}deg)`;
+  let t=0;
+  function animate(){
     requestAnimationFrame(animate);
+    t+=0.003;
+    pts.rotation.y=t*0.15+mouseX*0.08;
+    pts.rotation.x=t*0.05+mouseY*0.04;
+    renderer.render(scene,camera);
   }
   animate();
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
 })();
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════════════════════
+   THREE.JS DEVICE — INTERACTIVE 3D MODEL
+═══════════════════════════════════════════════════ */
+(function(){
+  const container = document.getElementById('device-three');
+  const W=container.offsetWidth, H=container.offsetHeight;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45,W/H,0.1,1000);
+  camera.position.set(0,0,6);
+  const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(W,H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  container.appendChild(renderer.domElement);
+
+  // Lighting
+  const amb = new THREE.AmbientLight(0x0a0a1a,1);
+  scene.add(amb);
+  const key = new THREE.DirectionalLight(0x00e5ff,2);
+  key.position.set(3,4,5);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x0055ff,0.8);
+  fill.position.set(-4,2,-3);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff,0.4);
+  rim.position.set(0,-3,2);
+  scene.add(rim);
+  // Point lights for glow effect
+  const pt1 = new THREE.PointLight(0x00e5ff,1.5,8);
+  pt1.position.set(1,0,3);
+  scene.add(pt1);
+
+  // ── Device body ──
+  const devGroup = new THREE.Group();
+  scene.add(devGroup);
+
+  // Main body — rounded box approximation
+  const bodyGeo = new THREE.BoxGeometry(1.0,1.8,0.4,4,8,2);
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color:0x0d0d1c,
+    metalness:0.9,
+    roughness:0.15,
+    envMapIntensity:1
+  });
+  const body = new THREE.Mesh(bodyGeo,bodyMat);
+  devGroup.add(body);
+
+  // Face plate (front glass panel)
+  const faceGeo = new THREE.BoxGeometry(0.94,1.74,0.05);
+  const faceMat = new THREE.MeshStandardMaterial({
+    color:0x080818,
+    metalness:0.3,
+    roughness:0.05,
+    transparent:true,
+    opacity:0.95
+  });
+  const face = new THREE.Mesh(faceGeo,faceMat);
+  face.position.z=0.22;
+  devGroup.add(face);
+
+  // Display ring (glowing circle)
+  const ringGeo = new THREE.TorusGeometry(0.28,0.012,16,64);
+  const ringMat = new THREE.MeshStandardMaterial({
+    color:0x00e5ff,
+    emissive:0x00e5ff,
+    emissiveIntensity:2
+  });
+  const ring = new THREE.Mesh(ringGeo,ringMat);
+  ring.position.z=0.26;
+  ring.position.y=0.12;
+  devGroup.add(ring);
+
+  // Outer ring
+  const outerRingGeo = new THREE.TorusGeometry(0.34,0.005,12,64);
+  const outerRing = new THREE.Mesh(outerRingGeo, new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:0.5,transparent:true,opacity:0.4}));
+  outerRing.position.z=0.255;
+  outerRing.position.y=0.12;
+  devGroup.add(outerRing);
+
+  // H2 text placeholder (disc)
+  const discGeo = new THREE.CircleGeometry(0.22,32);
+  const discMat = new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:0.3,transparent:true,opacity:0.08});
+  const disc = new THREE.Mesh(discGeo,discMat);
+  disc.position.z=0.255;
+  disc.position.y=0.12;
+  devGroup.add(disc);
+
+  // Status LED strip
+  const ledGeo = new THREE.BoxGeometry(0.5,0.018,0.012);
+  const ledMat = new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:3});
+  const led = new THREE.Mesh(ledGeo,ledMat);
+  led.position.set(0,-0.6,0.23);
+  devGroup.add(led);
+
+  // Top inlet
+  const inletGeo = new THREE.CylinderGeometry(0.06,0.06,0.12,16);
+  const inletMat = new THREE.MeshStandardMaterial({color:0x00b4d8,metalness:0.9,roughness:0.1});
+  const inlet = new THREE.Mesh(inletGeo,inletMat);
+  inlet.position.y=0.96;
+  devGroup.add(inlet);
+
+  // Bottom output port
+  const portGeo = new THREE.CylinderGeometry(0.055,0.055,0.1,16);
+  const portMat = new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:1.2,metalness:0.8,roughness:0.2});
+  const port = new THREE.Mesh(portGeo,portMat);
+  port.position.y=-0.96;
+  devGroup.add(port);
+
+  // Side buttons
+  const btnGeo = new THREE.BoxGeometry(0.04,0.18,0.08);
+  const btnMat = new THREE.MeshStandardMaterial({color:0x1a1a2e,metalness:0.7,roughness:0.3});
+  const btn1 = new THREE.Mesh(btnGeo,btnMat);
+  btn1.position.set(0.52,0.3,0);
+  devGroup.add(btn1);
+  const btn2 = new THREE.Mesh(btnGeo,btnMat);
+  btn2.position.set(0.52,-0.05,0);
+  btn2.scale.y=0.6;
+  devGroup.add(btn2);
+
+  // USB-C port on bottom edge
+  const usbGeo = new THREE.BoxGeometry(0.2,0.06,0.06);
+  const usbMat = new THREE.MeshStandardMaterial({color:0x222235,metalness:0.6,roughness:0.4});
+  const usb = new THREE.Mesh(usbGeo,usbMat);
+  usb.position.set(0,-0.92,0);
+  devGroup.add(usb);
+
+  // Floating bubble particles around device
+  const bubbleCount=80;
+  const bubbleGeo=new THREE.BufferGeometry();
+  const bpos=new Float32Array(bubbleCount*3);
+  const bvel=[];
+  for(let i=0;i<bubbleCount;i++){
+    bpos[i*3]=(Math.random()-0.5)*3;
+    bpos[i*3+1]=(Math.random()-0.5)*4;
+    bpos[i*3+2]=(Math.random()-0.5)*2;
+    bvel.push({x:(Math.random()-0.5)*0.005,y:Math.random()*0.008+0.003,z:(Math.random()-0.5)*0.003});
+  }
+  bubbleGeo.setAttribute('position',new THREE.BufferAttribute(bpos,3));
+  const bubbleMat=new THREE.PointsMaterial({color:0x00e5ff,size:0.04,transparent:true,opacity:0.6});
+  const bubbles=new THREE.Points(bubbleGeo,bubbleMat);
+  scene.add(bubbles);
+
+  // Mouse drag rotation
+  let isDragging=false, prevX=0, prevY=0;
+  let rotY=-0.4, rotX=0.1;
+  let velX=0,velY=0;
+  let autoRotate=true;
+
+  renderer.domElement.addEventListener('mousedown',e=>{isDragging=true;prevX=e.clientX;prevY=e.clientY;autoRotate=false;});
+  document.addEventListener('mouseup',()=>{isDragging=false;});
+  document.addEventListener('mousemove',e=>{
+    if(!isDragging)return;
+    velY=(e.clientX-prevX)*0.008;
+    velX=(e.clientY-prevY)*0.005;
+    rotY+=velY; rotX+=velX;
+    rotX=Math.max(-0.6,Math.min(0.6,rotX));
+    prevX=e.clientX; prevY=e.clientY;
+  });
+
+  // Touch
+  let lastTouch=null;
+  renderer.domElement.addEventListener('touchstart',e=>{lastTouch=e.touches[0];autoRotate=false;});
+  renderer.domElement.addEventListener('touchmove',e=>{
+    if(!lastTouch)return;
+    const t=e.touches[0];
+    rotY+=(t.clientX-lastTouch.clientX)*0.008;
+    rotX+=(t.clientY-lastTouch.clientY)*0.005;
+    rotX=Math.max(-0.6,Math.min(0.6,rotX));
+    lastTouch=t;
+  });
+
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.01;
+
+    if(autoRotate){
+      rotY+=0.005;
+    } else {
+      velX*=0.92; velY*=0.92;
+    }
+    devGroup.rotation.y+=(rotY-devGroup.rotation.y)*0.08;
+    devGroup.rotation.x+=(rotX-devGroup.rotation.x)*0.08;
+    devGroup.position.y=Math.sin(t*0.7)*0.08;
+
+    // Pulse glow
+    const pulse=Math.sin(t*2)*0.5+0.5;
+    ringMat.emissiveIntensity=1.5+pulse*1.5;
+    ledMat.emissiveIntensity=2+pulse*2;
+    portMat.emissiveIntensity=0.8+pulse*0.6;
+    pt1.intensity=1+pulse*0.8;
+
+    // Bubble animation
+    const bp=bubbleGeo.attributes.position.array;
+    for(let i=0;i<bubbleCount;i++){
+      bp[i*3]+=bvel[i].x;
+      bp[i*3+1]+=bvel[i].y;
+      bp[i*3+2]+=bvel[i].z;
+      if(bp[i*3+1]>2.5){
+        bp[i*3]=(Math.random()-0.5)*1.5;
+        bp[i*3+1]=-2;
+        bp[i*3+2]=(Math.random()-0.5)*1.5;
+      }
+    }
+    bubbleGeo.attributes.position.needsUpdate=true;
+
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  // Show labels after a delay
+  setTimeout(()=>{
+    ['dl1','dl2','dl3','dl4','dl5'].forEach((id,i)=>{
+      setTimeout(()=>document.getElementById(id)?.classList.add('visible'),i*180);
+    });
+  },800);
+
+  window.addEventListener('resize',()=>{
+    const nW=container.offsetWidth,nH=container.offsetHeight;
+    camera.aspect=nW/nH;
+    camera.updateProjectionMatrix();
+    renderer.setSize(nW,nH);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
+   THREE.JS MOLECULE VIEWER — H₂O SPLITTING
+═══════════════════════════════════════════════════ */
+(function(){
+  const container=document.getElementById('mol-three');
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(50,container.offsetWidth/container.offsetHeight,0.1,100);
+  camera.position.set(-4,0,10);
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(container.offsetWidth,container.offsetHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0x112244,1.5));
+  const dl=new THREE.DirectionalLight(0x00e5ff,2.5); dl.position.set(3,4,5); scene.add(dl);
+  const dl2=new THREE.DirectionalLight(0x0055ff,1); dl2.position.set(-3,-2,3); scene.add(dl2);
+
+  const group=new THREE.Group();
+  scene.add(group);
+
+  function makeSphere(r,color,emissive,x,y,z){
+    const geo=new THREE.SphereGeometry(r,32,32);
+    const mat=new THREE.MeshStandardMaterial({color,emissive:emissive||0x000000,emissiveIntensity:0.4,metalness:0.2,roughness:0.4});
+    const m=new THREE.Mesh(geo,mat);
+    m.position.set(x,y,z);
+    return m;
+  }
+  function makeBond(from,to,color){
+    const dir=new THREE.Vector3().subVectors(to,from);
+    const len=dir.length();
+    const geo=new THREE.CylinderGeometry(0.06,0.06,len,12);
+    const mat=new THREE.MeshStandardMaterial({color,metalness:0.1,roughness:0.6,transparent:true,opacity:0.6});
+    const m=new THREE.Mesh(geo,mat);
+    m.position.copy(from).add(dir.multiplyScalar(0.5));
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+    return m;
+  }
+
+  // Water molecule group (left)
+  const water=new THREE.Group();
+  const O1=makeSphere(0.5,0x0088cc,0x003366,0,0,0);
+  const H1=makeSphere(0.3,0x88ddff,0x004488,0.8,0.5,0);
+  const H2=makeSphere(0.3,0x88ddff,0x004488,-0.8,0.5,0);
+  water.add(O1,H1,H2);
+  water.add(makeBond(new THREE.Vector3(0,0,0),new THREE.Vector3(0.8,0.5,0),0x00aadd));
+  water.add(makeBond(new THREE.Vector3(0,0,0),new THREE.Vector3(-0.8,0.5,0),0x00aadd));
+  water.position.set(-3,0,0);
+  group.add(water);
+
+  // Second water molecule
+  const water2=water.clone();
+  water2.position.set(-3,2.2,0.3);
+  water2.rotation.z=0.5;
+  group.add(water2);
+
+  // H2 molecule (right, cyan)
+  const h2mol=new THREE.Group();
+  const Hb1=makeSphere(0.32,0x00e5ff,0x00aacc,0.4,0,0);
+  const Hb2=makeSphere(0.32,0x00e5ff,0x00aacc,-0.4,0,0);
+  h2mol.add(Hb1,Hb2);
+  h2mol.add(makeBond(new THREE.Vector3(-0.4,0,0),new THREE.Vector3(0.4,0,0),0x00e5ff));
+  h2mol.position.set(4,0.8,0);
+  group.add(h2mol);
+
+  const h2mol2=h2mol.clone();
+  h2mol2.position.set(4,-1.0,0.2);
+  h2mol2.rotation.z=0.8;
+  group.add(h2mol2);
+
+  // O2 molecule (right, blue)
+  const o2mol=new THREE.Group();
+  const Ob1=makeSphere(0.38,0x4466ff,0x2244cc,0.4,0,0);
+  const Ob2=makeSphere(0.38,0x4466ff,0x2244cc,-0.4,0,0);
+  o2mol.add(Ob1,Ob2);
+  o2mol.add(makeBond(new THREE.Vector3(-0.4,0,0),new THREE.Vector3(0.4,0,0),0x4466ff));
+  o2mol.position.set(4,2.5,-0.4);
+  group.add(o2mol);
+
+  // Central membrane line
+  const memGeo=new THREE.BoxGeometry(0.03,6,0.03);
+  const memMat=new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:0.5,transparent:true,opacity:0.3});
+  const membrane=new THREE.Mesh(memGeo,memMat);
+  membrane.position.x=0.5;
+  group.add(membrane);
+
+  // Proton trail particles
+  const trailCount=30;
+  const trailGeo=new THREE.BufferGeometry();
+  const tpos=new Float32Array(trailCount*3);
+  const tvel=[];
+  for(let i=0;i<trailCount;i++){
+    tpos[i*3]=(Math.random()-0.5)*1.5-1.5;
+    tpos[i*3+1]=(Math.random()-0.5)*4;
+    tpos[i*3+2]=(Math.random()-0.5)*1;
+    tvel.push(Math.random()*0.04+0.02);
+  }
+  trailGeo.setAttribute('position',new THREE.BufferAttribute(tpos,3));
+  const trailMat=new THREE.PointsMaterial({color:0x00ffcc,size:0.1,transparent:true,opacity:0.8});
+  const trail=new THREE.Points(trailGeo,trailMat);
+  group.add(trail);
+
+  let t=0;
+  let animating=false;
+  const io=new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting&&!animating){animating=true;animate();}
+  },{threshold:0.2});
+  io.observe(container);
+
+  function animate(){
+    if(!animating)return;
+    requestAnimationFrame(animate);
+    t+=0.008;
+    group.rotation.y=Math.sin(t*0.3)*0.15;
+    water.rotation.y=t*0.4;
+    water2.rotation.y=-t*0.3;
+    h2mol.rotation.y=t*0.6;
+    h2mol2.rotation.y=-t*0.5;
+    o2mol.rotation.x=t*0.4;
+    // Proton trail — move right
+    const tp=trailGeo.attributes.position.array;
+    for(let i=0;i<trailCount;i++){
+      tp[i*3]+=tvel[i];
+      if(tp[i*3]>3){
+        tp[i*3]=-3+(Math.random()-0.5)*1.5;
+        tp[i*3+1]=(Math.random()-0.5)*4;
+      }
+    }
+    trailGeo.attributes.position.needsUpdate=true;
+    memMat.emissiveIntensity=0.3+Math.sin(t*3)*0.2;
+    renderer.render(scene,camera);
+  }
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=container.offsetWidth/container.offsetHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.offsetWidth,container.offsetHeight);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
+   THREE.JS PREORDER BACKGROUND
+═══════════════════════════════════════════════════ */
+(function(){
+  const container=document.getElementById('preorder-three');
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,container.offsetWidth/container.offsetHeight,0.1,200);
+  camera.position.z=50;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(container.offsetWidth,container.offsetHeight);
+  container.appendChild(renderer.domElement);
+
+  // Wireframe torus knot
+  const geo=new THREE.TorusKnotGeometry(8,2,128,16);
+  const mat=new THREE.MeshBasicMaterial({color:0x00e5ff,wireframe:true,transparent:true,opacity:0.08});
+  const knot=new THREE.Mesh(geo,mat);
+  scene.add(knot);
+
+  const geo2=new THREE.TorusKnotGeometry(12,1,80,12);
+  const mat2=new THREE.MeshBasicMaterial({color:0x0055ff,wireframe:true,transparent:true,opacity:0.05});
+  const knot2=new THREE.Mesh(geo2,mat2);
+  scene.add(knot2);
+
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.004;
+    knot.rotation.x=t*0.4; knot.rotation.y=t*0.3;
+    knot2.rotation.x=-t*0.2; knot2.rotation.z=t*0.25;
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=container.offsetWidth/container.offsetHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.offsetWidth,container.offsetHeight);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
+   PROCESS VISUAL CANVASES — mini animations
+═══════════════════════════════════════════════════ */
+function runMiniCanvas(id, drawFn){
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  function resize(){
+    canvas.width=canvas.offsetWidth;
+    canvas.height=canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  let t=0;
+  const io=new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting){
+      (function loop(){requestAnimationFrame(loop);t++;ctx.clearRect(0,0,canvas.width,canvas.height);drawFn(ctx,canvas.width,canvas.height,t);})();
+      io.disconnect();
+    }
+  },{threshold:0.3});
+  io.observe(canvas.parentElement);
+}
+
+// Vis1 — water droplets falling
+runMiniCanvas('vis1',(ctx,W,H,t)=>{
+  for(let i=0;i<8;i++){
+    const x=W*0.2+i*(W*0.09);
+    const y=((t*1.5+i*30)%H*1.2)-H*0.1;
+    const a=Math.min(1,(H-y)/80)*0.7;
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle=`rgba(0,180,216,${a})`;
+    ctx.fill();
+  }
+});
+
+// Vis2 — electric arc (zig-zag)
+runMiniCanvas('vis2',(ctx,W,H,t)=>{
+  const cx=W/2;
+  ctx.strokeStyle=`rgba(0,85,255,${0.4+Math.sin(t*0.2)*0.3})`;
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx,20);
+  for(let y=20;y<H-20;y+=8){
+    const jitter=Math.sin(t*0.3+y*0.1)*20*(Math.random()+0.5);
+    ctx.lineTo(cx+jitter,y);
+  }
+  ctx.stroke();
+  // glow
+  const g=ctx.createLinearGradient(0,20,0,H-20);
+  g.addColorStop(0,'rgba(0,229,255,0)');
+  g.addColorStop(0.5,`rgba(0,229,255,${0.08+Math.sin(t*0.2)*0.04})`);
+  g.addColorStop(1,'rgba(0,229,255,0)');
+  ctx.fillStyle=g;
+  ctx.fillRect(cx-30,0,60,H);
+});
+
+// Vis3 — bubbles rising
+runMiniCanvas('vis3',(ctx,W,H,t)=>{
+  for(let i=0;i<15;i++){
+    const x=W*0.2+((i*71)%100)/100*W*0.6;
+    const y=H-(((t*0.8+i*20)%H));
+    const r=2+((i*37)%5);
+    const a=Math.min(1,y/80)*0.7;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(0,229,255,${a})`;
+    ctx.lineWidth=1;
+    ctx.stroke();
+  }
+});
+
+// Vis4 — pulse rings (safety)
+runMiniCanvas('vis4',(ctx,W,H,t)=>{
+  const cx=W/2,cy=H/2;
+  for(let i=0;i<3;i++){
+    const phase=(t*0.03+i*0.33)%1;
+    const r=phase*(Math.min(W,H)*0.42);
+    const a=(1-phase)*0.5;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(0,229,255,${a})`;
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+  }
+});
+
+/* ═══════════════════════════════════════════════════
    SCROLL REVEAL
-═══════════════════════════════════════ */
-(function() {
-  const revealEls = [
-    ...document.querySelectorAll('.feat-cell'),
-    ...document.querySelectorAll('.step'),
-    document.getElementById('how-title'),
-    document.getElementById('specs-title'),
-  ].filter(Boolean);
-
-  const specRows = document.querySelectorAll('.spec-key, .spec-val');
-
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('in');
-        io.unobserve(e.target);
-      }
+═══════════════════════════════════════════════════ */
+(function(){
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
     });
-  }, { threshold: 0.15 });
+  },{threshold:0.12});
 
-  revealEls.forEach(el => io.observe(el));
-
-  // staggered spec rows
-  specRows.forEach((el, i) => {
-    el.style.transitionDelay = `${i * 0.05}s`;
+  document.querySelectorAll('.stat,.sci-card,.use-card,.spec-row,.sec-h').forEach((el,i)=>{
+    el.style.transitionDelay=`${(i%4)*0.08}s`;
     io.observe(el);
   });
 
-  // final cta
-  const ctaEls = document.querySelectorAll('#final-cta h2, #final-cta p, #final-cta .price-block, #final-cta button');
-  ctaEls.forEach((el, i) => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = `opacity 0.8s ${i*0.15}s, transform 0.8s ${i*0.15}s`;
-    io.observe(el);
-    el.classList && !el.classList.contains('in') && io.observe(el);
-  });
-  // Manually add 'in' class logic for cta
-  const ctaObs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.style.opacity = '1';
-        e.target.style.transform = 'translateY(0)';
-        ctaObs.unobserve(e.target);
+  // Reveal classes for proc rows
+  const ioLeft=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ioLeft.unobserve(e.target);}});
+  },{threshold:0.15});
+  document.querySelectorAll('.reveal-left,.reveal-right,.proc-visual').forEach(el=>ioLeft.observe(el));
+
+  // General reveal
+  const ioG=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.style.opacity='1';
+        e.target.style.transform='translateY(0)';
+        ioG.unobserve(e.target);
       }
     });
-  }, { threshold: 0.2 });
-  ctaEls.forEach(el => ctaObs.observe(el));
+  },{threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el=>{
+    el.style.opacity='0';
+    el.style.transform='translateY(36px)';
+    el.style.transition='opacity 0.9s cubic-bezier(0.23,1,0.32,1),transform 0.9s cubic-bezier(0.23,1,0.32,1)';
+    ioG.observe(el);
+  });
 })();
 
-/* ═══════════════════════════════════════
-   SMOOTH SCROLL
-═══════════════════════════════════════ */
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+/* ═══════════════════════════════════════════════════
+   MODAL — Pre-order
+═══════════════════════════════════════════════════ */
+function openModal(){
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleOverlayClick(e){
+  if(e.target.id==='modal')closeModal();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+function submitOrder(){
+  const name=document.getElementById('f-name').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const use=document.getElementById('f-use').value;
+  if(!name||!email||!use){
+    // shake the submit button
+    const btn=document.getElementById('modal-submit-btn');
+    btn.style.animation='none';
+    btn.style.boxShadow='0 0 0 2px rgba(255,80,80,0.6)';
+    setTimeout(()=>{btn.style.boxShadow='';},1200);
+    return;
+  }
+  // Simulate loading
+  const btn=document.getElementById('modal-submit-btn');
+  btn.textContent='Processing...';
+  btn.disabled=true;
+  setTimeout(()=>{
+    // Generate fake reference
+    const ref='CED-'+Math.random().toString(36).substr(2,5).toUpperCase()+'-'+Date.now().toString().slice(-4);
+    document.getElementById('ref-num').textContent='REF #'+ref;
+    // Fade out form
+    document.getElementById('modal-form-wrap').classList.add('hide');
+    setTimeout(()=>{
+      document.getElementById('modal-form-wrap').style.display='none';
+      document.getElementById('modal-success').classList.add('show');
+    },320);
+  },1800);
+}
+
+/* ─── NAV scroll smooth ─── */
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
   });
 });
 </script>
