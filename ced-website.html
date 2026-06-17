@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CED — Compact Electrolysis Device</title>
+<style>
+  :root {
+    --void: #050508;
+    --deep: #0a0a12;
+    --surface: #10101a;
+    --border: rgba(255,255,255,0.07);
+    --white: #f8f9ff;
+    --cyan: #00e5ff;
+    --blue: #0055ff;
+    --aqua: #00b4d8;
+    --glow: rgba(0,229,255,0.15);
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    color: var(--white);
+    font-family: var(--font);
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 48px;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(5,5,8,0.72);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.4s;
+  }
+  nav .logo {
+    font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
+    color: var(--white);
+  }
+  nav .logo span { color: var(--cyan); }
+  nav ul {
+    list-style: none;
+    display: flex; gap: 36px;
+  }
+  nav ul li a {
+    color: rgba(248,249,255,0.75);
+    text-decoration: none;
+    font-size: 13px; font-weight: 400;
+    letter-spacing: 0.2px;
+    transition: color 0.2s;
+  }
+  nav ul li a:hover { color: var(--white); }
+  nav .nav-cta {
+    background: var(--cyan);
+    color: #000;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: var(--font);
+  }
+  nav .nav-cta:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 20px rgba(0,229,255,0.4);
+  }
+
+  /* ─── SECTIONS ─── */
+  section { position: relative; overflow: hidden; }
+
+  /* ─── HERO ─── */
+  #hero {
+    height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    background: radial-gradient(ellipse 80% 60% at 50% 60%, rgba(0,100,220,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 50% 80%, rgba(0,229,255,0.08) 0%, transparent 60%),
+                var(--void);
+  }
+  #hero canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .hero-inner { position: relative; z-index: 2; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 28px;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.9s 0.2s forwards;
+  }
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: ''; display: block;
+    width: 28px; height: 1px;
+    background: currentColor; opacity: 0.5;
+  }
+  h1 {
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.0;
+    color: var(--white);
+    opacity: 0; transform: translateY(30px);
+    animation: fadeUp 0.9s 0.4s forwards;
+  }
+  h1 .accent { color: var(--cyan); }
+  .hero-tagline {
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight: 300;
+    color: rgba(248,249,255,0.6);
+    margin-top: 20px;
+    letter-spacing: -0.01em;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.9s 0.6s forwards;
+  }
+  .hero-tagline em {
+    font-style: italic;
+    color: var(--cyan);
+    font-weight: 400;
+  }
+  .hero-ctas {
+    display: flex; gap: 14px; justify-content: center; align-items: center;
+    margin-top: 44px;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.9s 0.8s forwards;
+  }
+  .btn-primary {
+    background: var(--cyan);
+    color: #000;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 17px; font-weight: 600;
+    border: none; cursor: pointer;
+    font-family: var(--font);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(0,229,255,0.5);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--white);
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 17px; font-weight: 400;
+    border: 1px solid rgba(248,249,255,0.2);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: border-color 0.25s, color 0.25s;
+  }
+  .btn-ghost:hover { border-color: rgba(248,249,255,0.6); color: var(--white); }
+  .scroll-cue {
+    position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(248,249,255,0.35);
+    opacity: 0; animation: fadeUp 1s 1.4s forwards;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  /* ─── 3D DEVICE SCENE ─── */
+  #device-scene {
+    height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--deep);
+    perspective: 1200px;
+  }
+  .scene-container {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+  }
+  /* ─── CSS 3D Device ─── */
+  .device-wrapper {
+    position: relative;
+    transform-style: preserve-3d;
+    width: 180px; height: 320px;
+    transform: rotateY(-25deg) rotateX(8deg);
+    transition: transform 0.8s cubic-bezier(0.23,1,0.32,1);
+    filter: drop-shadow(0 40px 80px rgba(0,229,255,0.25));
+  }
+  .device-wrapper:hover {
+    transform: rotateY(0deg) rotateX(0deg);
+  }
+  /* Body - front */
+  .dev-face {
+    position: absolute;
+    border-radius: 28px;
+    backface-visibility: hidden;
+  }
+  .dev-front {
+    width: 180px; height: 320px;
+    background: linear-gradient(160deg, #1c1c2a 0%, #0d0d1a 100%);
+    border: 1px solid rgba(0,229,255,0.25);
+    top: 0; left: 0;
+    transform: translateZ(24px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    overflow: hidden;
+  }
+  .dev-front::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 30% 20%, rgba(0,229,255,0.08), transparent 60%);
+    pointer-events: none;
+  }
+  .dev-back {
+    width: 180px; height: 320px;
+    background: linear-gradient(160deg, #141420 0%, #0a0a14 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    top: 0; left: 0;
+    transform: translateZ(-24px) rotateY(180deg);
+  }
+  .dev-right {
+    width: 48px; height: 320px;
+    background: linear-gradient(to right, #141420, #1a1a28);
+    border: 1px solid rgba(255,255,255,0.04);
+    top: 0; left: 180px;
+    transform-origin: left center;
+    transform: rotateY(90deg) translateZ(0px);
+    border-radius: 0 28px 28px 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 24px; gap: 8px;
+  }
+  .dev-left {
+    width: 48px; height: 320px;
+    background: linear-gradient(to left, #141420, #1a1a28);
+    border: 1px solid rgba(255,255,255,0.04);
+    top: 0; left: 0;
+    transform-origin: right center;
+    transform: rotateY(-90deg) translateZ(0px);
+    border-radius: 28px 0 0 28px;
+  }
+  .dev-top {
+    width: 180px; height: 48px;
+    background: linear-gradient(to bottom, #1e1e2e, #151520);
+    border: 1px solid rgba(255,255,255,0.05);
+    top: 0; left: 0;
+    transform-origin: top center;
+    transform: rotateX(90deg) translateZ(0px);
+    border-radius: 28px 28px 0 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dev-bottom {
+    width: 180px; height: 48px;
+    background: linear-gradient(to top, #1e1e2e, #151520);
+    border: 1px solid rgba(255,255,255,0.05);
+    top: 320px; left: 0;
+    transform-origin: bottom center;
+    transform: rotateX(-90deg) translateZ(0px);
+    border-radius: 0 0 28px 28px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* output port on bottom */
+  .port {
+    width: 40px; height: 6px;
+    background: var(--cyan);
+    border-radius: 3px;
+    box-shadow: 0 0 10px var(--cyan), 0 0 20px rgba(0,229,255,0.4);
+  }
+  /* water inlet on top */
+  .inlet {
+    width: 28px; height: 5px;
+    background: rgba(0,180,216,0.7);
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(0,180,216,0.5);
+  }
+  /* front screen/display */
+  .dev-display {
+    width: 130px; height: 130px;
+    background: radial-gradient(ellipse at center, rgba(0,229,255,0.1) 0%, rgba(0,50,100,0.05) 100%);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .dev-display::after {
+    content: 'H₂';
+    font-size: 36px; font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan), 0 0 40px rgba(0,229,255,0.6);
+    letter-spacing: -1px;
+  }
+  .dev-ring {
+    position: absolute; inset: -8px;
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 50%;
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+  .dev-ring-2 {
+    position: absolute; inset: -18px;
+    border: 1px solid rgba(0,229,255,0.07);
+    border-radius: 50%;
+    animation: ringPulse 3s ease-in-out infinite 0.8s;
+  }
+  .dev-logo {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(248,249,255,0.4);
+  }
+  .dev-status {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 9px; color: var(--cyan); letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .status-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    animation: blink 2s ease-in-out infinite;
+  }
+  /* right side buttons */
+  .side-btn {
+    width: 3px; height: 28px;
+    background: rgba(0,229,255,0.3);
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(0,229,255,0.2);
+  }
+
+  /* floating labels around device */
+  .device-label {
+    position: absolute;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  .device-label.visible { opacity: 1; }
+  .device-label .label-line {
+    width: 60px; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0,229,255,0.5));
+  }
+  .device-label.right .label-line {
+    background: linear-gradient(to left, transparent, rgba(0,229,255,0.5));
+  }
+  .device-label .label-text {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.05em;
+    color: rgba(248,249,255,0.7);
+    white-space: nowrap;
+  }
+  .device-label .label-title {
+    font-size: 10px; font-weight: 600;
+    color: var(--cyan); text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── FEATURE STRIP ─── */
+  #feature-strip {
+    padding: 0;
+    background: var(--deep);
+  }
+  .feat-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .feat-cell {
+    padding: 64px 48px;
+    border-right: 1px solid var(--border);
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .feat-cell:last-child { border-right: none; }
+  .feat-cell.in { opacity: 1; transform: translateY(0); }
+  .feat-num {
+    font-size: 52px; font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .feat-unit { font-size: 20px; font-weight: 400; }
+  .feat-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: rgba(248,249,255,0.5);
+    margin-bottom: 12px;
+  }
+  .feat-desc {
+    font-size: 14px; line-height: 1.6;
+    color: rgba(248,249,255,0.55);
+    max-width: 220px;
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  #how {
+    padding: 140px 0;
+    background: var(--void);
+  }
+  .section-eyebrow {
+    text-align: center;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    text-align: center;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 80px;
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.8s, transform 0.8s;
+  }
+  .section-title.in { opacity: 1; transform: translateY(0); }
+
+  .steps {
+    max-width: 1000px; margin: 0 auto;
+    padding: 0 48px;
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 48px;
+  }
+  .step {
+    text-align: center;
+    opacity: 0; transform: translateY(50px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .step.in { opacity: 1; transform: translateY(0); }
+  .step-icon {
+    width: 80px; height: 80px;
+    margin: 0 auto 24px;
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-icon::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(0,85,255,0.08));
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 24px;
+  }
+  .step-icon svg { position: relative; z-index: 1; }
+  .step-num {
+    position: absolute; top: -6px; right: -6px;
+    width: 20px; height: 20px;
+    background: var(--cyan);
+    border-radius: 50%;
+    font-size: 10px; font-weight: 700;
+    color: #000;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+  }
+  .step h3 {
+    font-size: 20px; font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .step p {
+    font-size: 14px; line-height: 1.65;
+    color: rgba(248,249,255,0.55);
+  }
+  .step-connector {
+    position: absolute;
+    top: 40px;
+    left: calc(50% + 40px);
+    width: calc(100% - 80px);
+    height: 1px;
+    background: linear-gradient(to right, var(--cyan), rgba(0,229,255,0));
+    opacity: 0.2;
+  }
+
+  /* ─── ELECTROLYSIS VIS ─── */
+  #electrolysis {
+    height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--deep);
+    position: relative;
+  }
+  #electrolysis canvas {
+    position: absolute; inset: 0; z-index: 0;
+  }
+  .electrolysis-content {
+    position: relative; z-index: 2;
+    text-align: center; max-width: 600px;
+    padding: 0 24px;
+  }
+  .electrolysis-content h2 {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 700; letter-spacing: -0.04em; line-height: 1;
+    margin-bottom: 20px;
+  }
+  .electrolysis-content p {
+    font-size: 18px; line-height: 1.65;
+    color: rgba(248,249,255,0.6);
+  }
+  .molecule {
+    font-size: clamp(48px, 8vw, 88px);
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .molecule .h2o { color: var(--aqua); }
+  .molecule .arrow { color: rgba(248,249,255,0.2); font-size: 0.6em; }
+  .molecule .h2 { color: var(--cyan); }
+  .molecule .o2 { color: rgba(100,180,255,0.7); }
+
+  /* ─── SPECS ─── */
+  #specs {
+    padding: 140px 0;
+    background: var(--void);
+  }
+  .specs-grid {
+    max-width: 900px; margin: 0 auto;
+    padding: 0 48px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .spec-row {
+    display: contents;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .spec-row.in .spec-key, .spec-row.in .spec-val { opacity: 1; transform: translateX(0); }
+  .spec-key, .spec-val {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .spec-val { transform: translateX(20px); }
+  .spec-key {
+    font-size: 13px; font-weight: 600;
+    color: rgba(248,249,255,0.5);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    border-right: 1px solid var(--border);
+    display: flex; align-items: center;
+  }
+  .spec-val {
+    font-size: 17px; font-weight: 500;
+    color: var(--white);
+  }
+
+  /* ─── CTA HERO ─── */
+  #final-cta {
+    padding: 160px 0;
+    text-align: center;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,85,255,0.12) 0%, transparent 70%),
+                var(--void);
+    position: relative;
+  }
+  #final-cta h2 {
+    font-size: clamp(44px, 7vw, 88px);
+    font-weight: 700; letter-spacing: -0.04em; line-height: 1;
+    margin-bottom: 20px;
+  }
+  #final-cta p {
+    font-size: 20px; color: rgba(248,249,255,0.55);
+    margin-bottom: 48px;
+  }
+  .price-block {
+    display: inline-flex; align-items: baseline; gap: 4px;
+    margin-bottom: 36px;
+  }
+  .price-cur { font-size: 24px; font-weight: 600; color: rgba(248,249,255,0.5); }
+  .price-num {
+    font-size: 72px; font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--white);
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 48px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--void);
+  }
+  footer .f-logo { font-size: 15px; font-weight: 600; color: rgba(248,249,255,0.4); }
+  footer .f-logo span { color: var(--cyan); }
+  footer p { font-size: 12px; color: rgba(248,249,255,0.25); }
+
+  /* ─── PARTICLES (bubbles) ─── */
+  .bubble-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollPulse {
+    0%,100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+  @keyframes ringPulse {
+    0%,100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0px) rotateY(-25deg) rotateX(8deg); }
+    50% { transform: translateY(-12px) rotateY(-25deg) rotateX(8deg); }
+  }
+  @keyframes float-hover {
+    0%,100% { transform: translateY(0px) rotateY(5deg) rotateX(2deg); }
+    50% { transform: translateY(-10px) rotateY(-5deg) rotateX(-2deg); }
+  }
+  .device-wrapper.floating { animation: float 5s ease-in-out infinite; }
+  .device-wrapper.floating:hover { animation: float-hover 4s ease-in-out infinite; }
+
+  /* ─── SCROLL REVEAL DELAYS ─── */
+  .feat-cell:nth-child(2) { transition-delay: 0.1s; }
+  .feat-cell:nth-child(3) { transition-delay: 0.2s; }
+  .step:nth-child(2) { transition-delay: 0.15s; }
+  .step:nth-child(3) { transition-delay: 0.3s; }
+
+  @media (max-width: 768px) {
+    nav ul { display: none; }
+    .feat-grid { grid-template-columns: 1fr; }
+    .feat-cell { border-right: none; border-bottom: 1px solid var(--border); }
+    .steps { grid-template-columns: 1fr; gap: 36px; }
+    .specs-grid { grid-template-columns: 1fr; }
+    .spec-key { border-right: none; border-bottom: 1px solid var(--border); }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">C<span>E</span>D</div>
+  <ul>
+    <li><a href="#device-scene">Device</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#specs">Specs</a></li>
+  </ul>
+  <button class="nav-cta">Order Now</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Introducing</div>
+    <h1>CED<br><span class="accent">Hydrogen,</span><br>Instantly.</h1>
+    <p class="hero-tagline">Say hi to <em>hydrogen</em></p>
+    <div class="hero-ctas">
+      <button class="btn-primary">Order Now — $299</button>
+      <button class="btn-ghost">Learn More ↓</button>
+    </div>
+  </div>
+  <div class="scroll-cue">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- 3D DEVICE SCENE -->
+<section id="device-scene">
+  <canvas class="bubble-canvas" id="bubble-canvas"></canvas>
+  <div class="scene-container">
+
+    <!-- Left labels -->
+    <div class="device-label" id="lbl-inlet" style="right: calc(50% + 160px); top: calc(50% - 120px); flex-direction: row-reverse;">
+      <div>
+        <div class="label-title">Water Inlet</div>
+        <div class="label-text">Pour any clean water</div>
+      </div>
+      <div class="label-line"></div>
+    </div>
+    <div class="device-label" id="lbl-cell" style="right: calc(50% + 180px); top: 50%; flex-direction: row-reverse;">
+      <div>
+        <div class="label-title">Electrolysis Cell</div>
+        <div class="label-text">PEM membrane core</div>
+      </div>
+      <div class="label-line"></div>
+    </div>
+
+    <!-- The Device -->
+    <div class="device-wrapper floating" id="device3d">
+      <div class="dev-face dev-front">
+        <div class="dev-logo">CED · H₂</div>
+        <div class="dev-display">
+          <div class="dev-ring"></div>
+          <div class="dev-ring-2"></div>
+        </div>
+        <div class="dev-status">
+          <div class="status-dot"></div>
+          Active
+        </div>
+      </div>
+      <div class="dev-face dev-back"></div>
+      <div class="dev-face dev-right">
+        <div class="side-btn"></div>
+        <div class="side-btn" style="height:16px"></div>
+      </div>
+      <div class="dev-face dev-left"></div>
+      <div class="dev-face dev-top">
+        <div class="inlet"></div>
+      </div>
+      <div class="dev-face dev-bottom">
+        <div class="port"></div>
+      </div>
+    </div>
+
+    <!-- Right labels -->
+    <div class="device-label" id="lbl-output" style="left: calc(50% + 160px); top: calc(50% + 80px);">
+      <div class="label-line"></div>
+      <div>
+        <div class="label-title">H₂ Output</div>
+        <div class="label-text">99.9% pure hydrogen gas</div>
+      </div>
+    </div>
+    <div class="device-label" id="lbl-charge" style="left: calc(50% + 180px); top: calc(50% - 40px);">
+      <div class="label-line"></div>
+      <div>
+        <div class="label-title">USB-C Power</div>
+        <div class="label-text">5V · 3A · Any charger</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURE STRIP -->
+<section id="feature-strip">
+  <div class="feat-grid">
+    <div class="feat-cell">
+      <div class="feat-num">99.9<span class="feat-unit">%</span></div>
+      <div class="feat-label">Purity</div>
+      <div class="feat-desc">PEM membrane technology delivers pharmaceutical-grade hydrogen purity in every output.</div>
+    </div>
+    <div class="feat-cell">
+      <div class="feat-num">&lt;30<span class="feat-unit">s</span></div>
+      <div class="feat-label">Time to H₂</div>
+      <div class="feat-desc">Pour water in and hydrogen flows out in under 30 seconds. No warmup, no waiting.</div>
+    </div>
+    <div class="feat-cell">
+      <div class="feat-num">180<span class="feat-unit">g</span></div>
+      <div class="feat-label">Weight</div>
+      <div class="feat-desc">Lighter than your phone. Pocket-sized hydrogen generation, wherever you go.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-eyebrow">The Science</div>
+  <h2 class="section-title" id="how-title">Electrolysis, simplified.</h2>
+  <div class="steps">
+    <div class="step" style="position:relative">
+      <div class="step-icon">
+        <span class="step-num">1</span>
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <ellipse cx="18" cy="22" rx="10" ry="8" stroke="#00e5ff" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <path d="M18 6 C18 6 10 16 10 22" stroke="#00b4d8" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M18 6 C18 6 26 16 26 22" stroke="#00b4d8" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="18" cy="6" r="2" fill="#00e5ff"/>
+        </svg>
+      </div>
+      <h3>Add Water</h3>
+      <p>Pour clean tap or distilled water into the inlet port on top. That's the only ingredient you need.</p>
+    </div>
+    <div class="step" style="position:relative">
+      <div class="step-icon">
+        <span class="step-num">2</span>
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <rect x="8" y="14" width="20" height="8" rx="2" stroke="#00e5ff" stroke-width="1.5" fill="none"/>
+          <line x1="18" y1="14" x2="18" y2="8" stroke="#0055ff" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="18" y1="22" x2="18" y2="28" stroke="#0055ff" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="18" cy="6" r="2" fill="#0055ff"/>
+          <circle cx="18" cy="30" r="2" fill="#0055ff"/>
+          <text x="13" y="21" fill="#00e5ff" font-size="7" font-family="sans-serif">H₂O</text>
+        </svg>
+      </div>
+      <h3>Electrolysis</h3>
+      <p>Our PEM cell splits water molecules using a low-voltage current, separating hydrogen from oxygen.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">
+        <span class="step-num">3</span>
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="22" r="6" stroke="#00e5ff" stroke-width="1.5" fill="rgba(0,229,255,0.08)"/>
+          <circle cx="18" cy="22" r="2" fill="#00e5ff"/>
+          <path d="M18 16 L18 8 M14 12 L18 8 L22 12" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="14" y="25" fill="#00e5ff" font-size="7" font-family="sans-serif">H₂</text>
+        </svg>
+      </div>
+      <h3>Pure Hydrogen</h3>
+      <p>99.9% pure hydrogen gas flows through the output port, ready to use immediately.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ELECTROLYSIS ANIMATION -->
+<section id="electrolysis">
+  <canvas id="elec-canvas"></canvas>
+  <div class="electrolysis-content">
+    <div class="molecule">
+      <span class="h2o">H₂O</span>
+      <span class="arrow"> → </span>
+      <span class="h2">H₂</span>
+      <span class="arrow"> + </span>
+      <span class="o2">½O₂</span>
+    </div>
+    <h2>Water in.<br>Hydrogen out.</h2>
+    <p>The CED uses proton exchange membrane electrolysis — the same technology trusted in industrial applications, now in your hand.</p>
+  </div>
+</section>
+
+<!-- SPECS -->
+<section id="specs">
+  <div class="section-eyebrow">Specifications</div>
+  <h2 class="section-title" id="specs-title">Built to impress.</h2>
+  <div class="specs-grid">
+    <div class="spec-row" id="sr1"><div class="spec-key">Model</div><div class="spec-val">CED-1 Compact</div></div>
+    <div class="spec-row" id="sr2"><div class="spec-key">Technology</div><div class="spec-val">PEM Electrolysis</div></div>
+    <div class="spec-row" id="sr3"><div class="spec-key">Hydrogen Purity</div><div class="spec-val">≥99.9%</div></div>
+    <div class="spec-row" id="sr4"><div class="spec-key">Flow Rate</div><div class="spec-val">50 mL/min</div></div>
+    <div class="spec-row" id="sr5"><div class="spec-key">Input Power</div><div class="spec-val">USB-C · 5V / 3A</div></div>
+    <div class="spec-row" id="sr6"><div class="spec-key">Water Type</div><div class="spec-val">Tap or Distilled</div></div>
+    <div class="spec-row" id="sr7"><div class="spec-key">Dimensions</div><div class="spec-val">120 × 60 × 28 mm</div></div>
+    <div class="spec-row" id="sr8"><div class="spec-key">Weight</div><div class="spec-val">180 g</div></div>
+    <div class="spec-row" id="sr9"><div class="spec-key">Start Time</div><div class="spec-val">&lt; 30 seconds</div></div>
+    <div class="spec-row" id="sr10"><div class="spec-key">Certifications</div><div class="spec-val">CE · FCC · RoHS</div></div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section id="final-cta">
+  <div class="section-eyebrow">Available Now</div>
+  <h2>Meet your hydrogen.<br><span style="color:var(--cyan)">CED.</span></h2>
+  <p>The world's most compact electrolysis device. In your hand.</p>
+  <div class="price-block">
+    <span class="price-cur">$</span>
+    <span class="price-num">299</span>
+  </div>
+  <br>
+  <button class="btn-primary" style="font-size:19px;padding:16px 44px;">Order CED — Ships June 2025</button>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">C<span>E</span>D</div>
+  <p>© 2025 CED Technologies Ltd · Compact Electrolysis Device</p>
+  <p style="color:rgba(248,249,255,0.2);font-size:11px">For research and consumer use · Not medical advice</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════
+   HERO PARTICLE FIELD
+═══════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * W;
+      this.y = Math.random() * H;
+      this.r = Math.random() * 1.8 + 0.3;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = -Math.random() * 0.5 - 0.1;
+      this.alpha = Math.random() * 0.5 + 0.1;
+      this.cyan = Math.random() > 0.6;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.y < -10) this.reset(), this.y = H + 5;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.cyan
+        ? `rgba(0,229,255,${this.alpha})`
+        : `rgba(80,130,255,${this.alpha * 0.6})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    // subtle connection lines
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i+1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        if (d < 90) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(0,229,255,${(1-d/90)*0.06})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════
+   DEVICE SCENE BUBBLES
+═══════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('bubble-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, bubbles = [];
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Bubble {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = W/2 + (Math.random()-0.5)*200;
+      this.y = H * 0.75 + Math.random() * 60;
+      this.r = Math.random() * 6 + 2;
+      this.vy = -(Math.random() * 1.5 + 0.5);
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.alpha = Math.random() * 0.5 + 0.2;
+      this.life = 0;
+      this.maxLife = Math.random() * 150 + 100;
+    }
+    update() {
+      this.life++;
+      this.x += this.vx + Math.sin(this.life * 0.05) * 0.3;
+      this.y += this.vy;
+      this.alpha = Math.sin((this.life / this.maxLife) * Math.PI) * 0.6;
+      if (this.life > this.maxLife) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.strokeStyle = `rgba(0,229,255,${this.alpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      // inner glow
+      const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+      g.addColorStop(0, `rgba(0,229,255,${this.alpha * 0.3})`);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 60; i++) {
+    const b = new Bubble();
+    b.life = Math.random() * b.maxLife; // stagger
+    bubbles.push(b);
+  }
+
+  let scene = document.getElementById('device-scene');
+  let animating = false;
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && !animating) {
+      animating = true;
+      draw();
+      // show labels
+      setTimeout(() => {
+        ['lbl-inlet','lbl-cell','lbl-output','lbl-charge'].forEach((id,i) => {
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('visible');
+          }, i * 200);
+        });
+      }, 500);
+    }
+  }, { threshold: 0.3 });
+  obs.observe(scene);
+
+  function draw() {
+    if (!animating) return;
+    ctx.clearRect(0, 0, W, H);
+    bubbles.forEach(b => { b.update(); b.draw(); });
+    requestAnimationFrame(draw);
+  }
+})();
+
+/* ═══════════════════════════════════════
+   ELECTROLYSIS CANVAS — SPLITTING WATER
+═══════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('elec-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  let particles = [];
+  let animating = false;
+  let t = 0;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class ElecParticle {
+    constructor(side) {
+      // side: 'h2' (left, cyan) or 'o2' (right, blue)
+      this.side = side;
+      this.reset();
+    }
+    reset() {
+      // start near center
+      this.x = W/2 + (Math.random()-0.5)*40;
+      this.y = H/2 + (Math.random()-0.5)*40;
+      this.tx = this.side === 'h2'
+        ? W * 0.2 + Math.random() * W * 0.2
+        : W * 0.6 + Math.random() * W * 0.2;
+      this.ty = Math.random() * H;
+      this.progress = 0;
+      this.speed = Math.random() * 0.006 + 0.003;
+      this.r = Math.random() * 4 + 1.5;
+      this.alpha = 0;
+      this.label = this.side === 'h2' ? 'H₂' : 'O₂';
+    }
+    update() {
+      this.progress += this.speed;
+      if (this.progress >= 1) { this.reset(); return; }
+      this.alpha = Math.sin(this.progress * Math.PI) * 0.7;
+      this.cx = this.x + (this.tx - this.x) * this.easeInOut(this.progress);
+      this.cy = this.y + (this.ty - this.y) * this.easeInOut(this.progress);
+    }
+    easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.cx, this.cy, this.r, 0, Math.PI*2);
+      const color = this.side === 'h2' ? `rgba(0,229,255,${this.alpha})` : `rgba(80,150,255,${this.alpha * 0.7})`;
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  for (let i = 0; i < 50; i++) {
+    const p = new ElecParticle(Math.random() > 0.33 ? 'h2' : 'o2');
+    p.progress = Math.random();
+    particles.push(p);
+  }
+
+  // Central "membrane" line
+  function drawMembrane() {
+    const x = W/2;
+    const pulse = Math.sin(t * 0.05) * 0.3 + 0.7;
+    ctx.beginPath();
+    ctx.moveTo(x, H*0.1);
+    ctx.lineTo(x, H*0.9);
+    ctx.strokeStyle = `rgba(0,229,255,${0.15 * pulse})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function draw() {
+    if (!animating) return;
+    ctx.clearRect(0, 0, W, H);
+    t++;
+    drawMembrane();
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(draw);
+  }
+
+  const obs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && !animating) {
+      animating = true;
+      draw();
+    }
+  }, { threshold: 0.3 });
+  obs.observe(document.getElementById('electrolysis'));
+})();
+
+/* ═══════════════════════════════════════
+   MOUSE PARALLAX ON DEVICE
+═══════════════════════════════════════ */
+(function() {
+  const device = document.getElementById('device3d');
+  const scene = document.getElementById('device-scene');
+  let baseRX = 8, baseRY = -25;
+  let mouseX = 0, mouseY = 0;
+  let curX = baseRX, curY = baseRY;
+
+  scene.addEventListener('mousemove', e => {
+    const rect = scene.getBoundingClientRect();
+    mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  });
+  scene.addEventListener('mouseleave', () => { mouseX = 0; mouseY = 0; });
+
+  function animate() {
+    const tRX = baseRX - mouseY * 15;
+    const tRY = baseRY + mouseX * 25;
+    curX += (tRX - curX) * 0.05;
+    curY += (tRY - curY) * 0.05;
+    device.style.transform = `translateY(${Math.sin(Date.now()*0.001)*-8}px) rotateY(${curY}deg) rotateX(${curX}deg)`;
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ═══════════════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════════════ */
+(function() {
+  const revealEls = [
+    ...document.querySelectorAll('.feat-cell'),
+    ...document.querySelectorAll('.step'),
+    document.getElementById('how-title'),
+    document.getElementById('specs-title'),
+  ].filter(Boolean);
+
+  const specRows = document.querySelectorAll('.spec-key, .spec-val');
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(el => io.observe(el));
+
+  // staggered spec rows
+  specRows.forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.05}s`;
+    io.observe(el);
+  });
+
+  // final cta
+  const ctaEls = document.querySelectorAll('#final-cta h2, #final-cta p, #final-cta .price-block, #final-cta button');
+  ctaEls.forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = `opacity 0.8s ${i*0.15}s, transform 0.8s ${i*0.15}s`;
+    io.observe(el);
+    el.classList && !el.classList.contains('in') && io.observe(el);
+  });
+  // Manually add 'in' class logic for cta
+  const ctaObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        ctaObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  ctaEls.forEach(el => ctaObs.observe(el));
+})();
+
+/* ═══════════════════════════════════════
+   SMOOTH SCROLL
+═══════════════════════════════════════ */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
